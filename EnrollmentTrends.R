@@ -82,7 +82,7 @@ p5 = ggplot(GraphData, aes(x=adjustedDate, y=count, color=year)) +
               se=F,    # Don't add shaded confidence region
               fullrange=F,  # Extend regression lines?
               span = .5, #adjust wiggliness
-                size = 2) +
+              size = 2) +
   # geom_line() +
   theme(text = element_text(size=30)) 
 p5

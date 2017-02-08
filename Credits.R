@@ -43,7 +43,7 @@ CreditOutput = CreditOutput[!is.na(CreditOutput$Local.ID..optional.),]
 CreditOutput$credits = NA
 for (i in 1:nrow(CreditOutput)){
   if(CreditOutput$Local.ID..optional.[i] %in% d5$ID){
-  CreditOutput$credits[i] = d5$credits[d5$ID == CreditOutput$Local.ID..optional.[i]]
+    CreditOutput$credits[i] = d5$credits[d5$ID == CreditOutput$Local.ID..optional.[i]]
   }
 }
 

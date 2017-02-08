@@ -22,7 +22,7 @@ Workbook2[which(is.na(Workbook2), arr.ind = TRUE)] = FALSE
 
 x = list()  #initialize the list
 for(i in 2:6){                        #for each exam category
- x[[i-1]] = table(Workbook2[,c(1,i)]) #store a frequency table of Cohort x Passed for that category
+  x[[i-1]] = table(Workbook2[,c(1,i)]) #store a frequency table of Cohort x Passed for that category
 }
 
 
