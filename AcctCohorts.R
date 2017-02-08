@@ -2,8 +2,6 @@
 
 #Figure out cohort membership by year by cohort
 
-Workbook = Workbookraw #make a copy of the raw workbook
-
 #limit the workbook to just those students who are in the acct cohort for the year
 #Change the variable name to reflect the year it was in september
 Workbook1 = Workbook[Workbook$X2014 == "yes",] 

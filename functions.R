@@ -1,3 +1,5 @@
+#functions.R
+
 library("abind")
 library("ggplot2")
 library("scales")
@@ -32,11 +34,16 @@ MbetterComp = function(x,y){
 }
 
 
-#This function checks to see if two vectors are exactly equal, where NA entries are considered equal to each other
+#This function takes two vectors of equal length and finds the betterMax of each position
 VbetterMax = function(x,y){
   apply(X = cbind(x,y), MARGIN = 1, FUN = betterMax)
 }
 
+
+#This function checks to see if two vectors are exactly equal, where NA entries are considered equal to each other
+VbetterComp = function(x,y){
+  apply(X = cbind(x,y), MARGIN = 1, FUN = betterComp)
+}
 
 
 #This functions collapses the planes of a 3-dimensional array, leaving a two dimensional matrix
@@ -45,6 +52,3 @@ VbetterMax = function(x,y){
 MbetterMax = function(x){
   apply(X = x, MARGIN = c(1,2), FUN = betterMax)
 }
-
-
-

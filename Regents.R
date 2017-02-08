@@ -1,9 +1,9 @@
 #Regents
 source("functions.R")
 
-#-----------------------------#
-# Load the data from files ####
-#-----------------------------#
+#--------------------------------#
+#### Load the data from files ####
+#--------------------------------#
 
 #Get the the Output query from the Regents database (located at data drive/database project/regents.accdb)
 #Paste it into the files RegentsDB.csv in the folder for this project
@@ -13,27 +13,19 @@ source("functions.R")
 RegentsDBraw = read.csv("RegentsDB.csv", stringsAsFactors = FALSE) 
 
 
-#Load the All Info in 1 Sheet tab from the Accountability Workbook
-Workbookraw.xlsx = read.xlsx(
-  xlsxFile = "J:/Accountability Spreadsheet/working copy/Green Tech Cohort Data Collection Workbook.xlsx", 
-  sheet = "All info in 1 sheet",startRow = 2)
-Workbookraw = Workbookraw.xlsx[!is.na(Workbookraw.xlsx$`Local.ID.(optional)`),-c(1,2,3)]
-
-
-
 #see How to Export All Regents Scores from PowerSchool (Google Drive > Instructions > PowerSchool)
 #Put the output into the file PowerSchoolRegents.csv in the folder for this project
 PowerSchoolraw = read.csv("PowerSchoolRegents.csv", stringsAsFactors = FALSE) 
 
 #save the raw versions in case the raw data is needed later
 RegentsDB = RegentsDBraw
-Workbook = Workbookraw
+Workbook.sub = Workbook
 PowerSchool = PowerSchoolraw
 
 
-#---------------------------------#
-# Set the exams and categories ####
-#---------------------------------#
+#------------------------------------#
+#### Set the exams and categories ####
+#------------------------------------#
 
 #if new exams have been introduced, you'll need to add them here
 Exams = c("ELAOld","AlgOld","GeomOld","Trig","Bio","Earth","Chem","Phys","US","Global","ELACC","AlgCC","GeomCC", "Alg2CC")
@@ -41,21 +33,21 @@ Categories = c("Alg","Geom","Trig","Bio","Earth","Chem","Phys","US","Global","EL
 
 
 
-#--------------------------------------------------#
-# Make Workbook score matrix and session matrix ####
-#--------------------------------------------------#
+#---------------------------------------------------------#
+#### Make Workbook.sub score matrix and session matrix ####
+#---------------------------------------------------------#
 
-str(Workbook) #take a look at what is in the Workbook object
+str(Workbook.sub) #take a look at what is in the Workbook.sub object
 
 #remove blank rows and unnecessary columns
 # this line should keep the student ID and all of the regents scaled scores, performance levels, and exam year/terms
-Workbook = Workbook[, c(2, 37:39,46:84)]  
+Workbook.sub = Workbook.sub[, c(2, 37:39,46:84)]  
 
-names(Workbook)[1] = "ID"             #change the first column to be named ID
-studentlist = as.double(Workbook[,1]) #this needs to be a double precision because some ID's are very long
+names(Workbook.sub)[1] = "ID"             #change the first column to be named ID
+studentlist = as.double(Workbook.sub[,1]) #this needs to be a double precision because some ID's are very long
 n = length(studentlist)               #this is the number of students
-wkbkMatrix = matrix(nrow = n, ncol = length(Exams), data = integer(0))     #set up the matrix to hold scores from the workbook
-wkbkSessions = matrix(nrow = n, ncol = length(Exams), data = character(0)) #set up the matrix to hold sessions from the workbook
+wkbkMatrix = matrix(nrow = n, ncol = length(Exams), data = integer(0))     #set up the matrix to hold scores from the Workbook.sub
+wkbkSessions = matrix(nrow = n, ncol = length(Exams), data = character(0)) #set up the matrix to hold sessions from the Workbook.sub
 rownames(wkbkMatrix) = studentlist   #in the matrices, name the rows according to the student ID
 rownames(wkbkSessions) = studentlist
 colnames(wkbkMatrix) = Exams         #in the matrices, name the columns according to the exam name
@@ -64,15 +56,15 @@ colnames(wkbkSessions) = Exams
 # Load in the actual scores and sessions ##
 cols = 3*(1:length(Exams))-1  #the scores are in columns 2, 5, 8, etc.
 for (i in studentlist){
-  wkbkMatrix[which(rownames(wkbkMatrix) == i),] = as.integer(Workbook[which(Workbook$ID == i),cols])
-  wkbkSessions[which(rownames(wkbkSessions) == i),] = as.character(Workbook[which(Workbook$ID == i),cols+2])
+  wkbkMatrix[which(rownames(wkbkMatrix) == i),] = as.integer(Workbook.sub[which(Workbook.sub$ID == i),cols])
+  wkbkSessions[which(rownames(wkbkSessions) == i),] = as.character(Workbook.sub[which(Workbook.sub$ID == i),cols+2])
 } #end of for loop
 
 
 
-#----------------------------------------------------------#
-# Make Regents Database score matrix and session matrix ####
-#----------------------------------------------------------#
+#-------------------------------------------------------------#
+#### Make Regents Database score matrix and session matrix ####
+#-------------------------------------------------------------#
 
 names(RegentsDB)[1] = "ID"                                               #change the first column to be named ID
 dbMatrix = matrix(nrow = n, ncol = length(Exams), data = integer(0))     #set up the matrix to hold scores from the database
@@ -91,9 +83,9 @@ for (i in studentlist){
 
 
 
-#------------------------------------------#
-# Compare Regents Database and Workbook ####
-#------------------------------------------#
+#-------------------------------------------------#
+#### Compare Regents Database and Workbook.sub ####
+#-------------------------------------------------#
 
 CompareMatrix = matrix(nrow = n, ncol = length(Exams), data = integer(0))   #set up a matrix that will hold the best scores
 rownames(CompareMatrix) = studentlist              #in the matrix, name the rows according to the student ID
@@ -111,10 +103,10 @@ if(sum(!MbetterComp(CompareMatrix, dbMatrix) & !is.na(CompareMatrix))){         
 
 #Note:
 #     Take a look at the ScoresMissingFromDatabase.csv file
-#     Those are instances in which a student has a score in the workbook but not in the database
+#     Those are instances in which a student has a score in the Workbook.sub but not in the database
 
 
-#Create output to be pasted into the workbook
+#Create output to be pasted into the Workbook.sub
 wkbkOutput = data.frame(ID = rownames(CompareMatrix))   #set up the output object
 temp = CompareMatrix                                    #create a temporary version of the best scores matrix
 rownames(temp) = NULL                                   #get rid of the rownames in temp so it can be merged with the output object
@@ -126,8 +118,8 @@ rownames(dbMatrix) = NULL
 
 for (i in 1:length(Exams)){                                         #for each exam,
   wkbkOutput[,length(Exams)+1+i] = NA                               #add a column for it in the output object
-  grabRows = which(wkbkOutput[,1+i] == wkbkMatrix[,i])              #find which scores are consistent with the workbook
-  wkbkOutput[grabRows,length(Exams)+1+i] = wkbkSessions[grabRows,i] #get the sessions from the workbook and insert them in the output object
+  grabRows = which(wkbkOutput[,1+i] == wkbkMatrix[,i])              #find which scores are consistent with the Workbook.sub
+  wkbkOutput[grabRows,length(Exams)+1+i] = wkbkSessions[grabRows,i] #get the sessions from the Workbook.sub and insert them in the output object
   grabRows = which(wkbkOutput[,1+i] == dbMatrix[,i])                               #find which scores are consistent with the database
   wkbkOutput[grabRows,length(Exams)+1+i] = dbSessions[grabRows,i]                  #get the sessions from the database and insert them in the output object
   names(wkbkOutput)[length(Exams)+1+i] = paste0(names(wkbkOutput)[1+i]," Session") #name the new column by the test name plus the word session
@@ -149,9 +141,9 @@ write.csv(wkbkOutput,file = "PasteThisIntoTheWorkBook.csv")                  #ex
 #     You will have to refill the formulas for the performance levels
 
 
-#------------------------------------------------------#
-# Make category score matrix from the CompareMatrix ####
-#------------------------------------------------------#
+#---------------------------------------------------------#
+#### Make category score matrix from the CompareMatrix ####
+#---------------------------------------------------------#
 
 Alg = VbetterMax(CompareMatrix[,"AlgOld"], CompareMatrix[,"AlgCC"])     #get the best scores across the two algebra exams
 Geom = VbetterMax(CompareMatrix[,"GeomOld"], CompareMatrix[,"GeomCC"])  #get the best scores across the two geometry exams
@@ -161,9 +153,9 @@ CatBest = cbind(Alg, Geom, Trig, CompareMatrix[,5:10], ELA)             #make a 
 
 
 
-#----------------------------#
-# Make PowerSchool matrix ####
-#----------------------------#
+#-------------------------------#
+#### Make PowerSchool matrix ####
+#-------------------------------#
 
 names(PowerSchool)[1] = "ID"                      #change the name of the ID variable to ID
 psMatrix = matrix(                                #set up the matrix to hold the scores
@@ -181,9 +173,9 @@ for (i in studentlist){                           #for each student
 
 
 
-#----------------------------------------------------#
-# Compare CategoryOutput and PowerSchool matrices ####
-#----------------------------------------------------#
+#-------------------------------------------------------#
+#### Compare CategoryOutput and PowerSchool matrices ####
+#-------------------------------------------------------#
 
 CatCompareMatrix = matrix(                         #set up the matrix to hold the best category scores
   nrow = n, 
@@ -236,14 +228,14 @@ if(sum(!MbetterComp(CatCompareMatrix, psMatrix) & !is.na(CatCompareMatrix))){   
 
 
 
-#----------------------------------------------------------------------------#
-#Create a list of things that need to be updated in the database/workbook ####
-#----------------------------------------------------------------------------#
+#------------------------------------------------------------------------------------#
+#### Create a list of things that need to be updated in the database/Workbook.sub ####
+#------------------------------------------------------------------------------------#
 
-#These are PowerSchool scores for which we have no record in the database or workbook
+#These are PowerSchool scores for which we have no record in the database or Workbook.sub
 #Someone put them in PS, but never gave them to the data office
-#CatBest is the set of best scores taken from the Workbook and Regents Database
-#CatCompareMatrix is the set of best scores taken from the Workbook, Database, and PowerSchool
+#CatBest is the set of best scores taken from the Workbook.sub and Regents Database
+#CatCompareMatrix is the set of best scores taken from the Workbook.sub, Database, and PowerSchool
 
 temp = !MbetterComp(CatCompareMatrix, CatBest)
 if(sum(temp)>0){          #if there are any best scores not in the database

@@ -1,3 +1,7 @@
+#SeniorInitiative.R
+
+#This is a largely undocumented scrip to find students who should participate in Senior Initiative based on their regents scores
+#The regents scores in the workbook must be updated before this script is run
 
 names(Workbookraw)
 

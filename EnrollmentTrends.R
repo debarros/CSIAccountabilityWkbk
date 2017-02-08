@@ -1,33 +1,9 @@
 #Enrollment trends
 
-#----------------------------#
-# load functions and data ####
-#----------------------------#
-source("functions.R")
 
-#workbook.csv contains the entire All Info in 1 Sheet tab from the accountability workbook, minus the top row and first 3 columns (start from cell D2)
-Workbookraw = read.csv("workbook.csv", stringsAsFactors = FALSE) 
-Workbook = Workbookraw
-
-#Or get the most up to date stuff from the actual workbook
-Workbookraw.xlsx = read.xlsx(
-  xlsxFile = "J:/Accountability Spreadsheet/working copy/Green Tech Cohort Data Collection Workbook.xlsx", 
-  sheet = "All info in 1 sheet",startRow = 2)
-Workbook = Workbookraw.xlsx[!is.na(Workbookraw.xlsx$`Local.ID.(optional)`),-c(1,2,3)]
-
-
-
-#-------------------#
-# Clean the data ####
-#-------------------#
-
-# Remove those who never attended and check the remaining discharge reasons
-x = Workbook$Discharge.Reason != "never attended"
-x[is.na(x)] = T
-Workbook = Workbook[x,]
-
-
-
+#----------------------#
+#### Clean the data ####
+#----------------------#
 
 #create the entry date variable
 entry = as.Date(Workbook$Date.First.Enrolled.at.GTH, format = "%m/%d/%Y")
@@ -40,9 +16,9 @@ exit = as.Date(Workbook$Date.left.GTH, origin = "1899-12-30")
 exit[is.na(exit)] = as.Date("6/30/2017", format = "%m/%d/%Y")
 betterMax(exit)
 
-#-----------------------------------------------------#
-# Graph Total enrollment overlaying calendar years ####
-#-----------------------------------------------------#
+#--------------------------------------------------------#
+#### Graph Total enrollment overlaying calendar years ####
+#--------------------------------------------------------#
 
 #This sets the sequence of dates to be used.
 enddate = Sys.Date()
@@ -113,9 +89,9 @@ p5
 
 
 
-#-----------------------------------------#
-# Graph enrollment by cohort over time ####
-#-----------------------------------------#
+#--------------------------------------------#
+#### Graph enrollment by cohort over time ####
+#--------------------------------------------#
 
 # Make enrollment_long
 str(Enrollment)
@@ -160,9 +136,9 @@ p6 = ggplot(data = enrollment_long, aes(x = dates, y = value, colour = Cohort)) 
 p6
 
 
-#-----------------------------------------------#
-# Graph 4-year enrollment overlaying cohorts ####
-#-----------------------------------------------#
+#--------------------------------------------------#
+#### Graph 4-year enrollment overlaying cohorts ####
+#--------------------------------------------------#
 
 str(enrollment_long)
 enrollment_long$cohort = as.numeric(substr(enrollment_long$Cohort, 2, 5))
@@ -187,9 +163,9 @@ max(enrollment_long$adjusted_dates)
 min(enrollment_long$adjusted_dates)
 
 
-#--------------------------------------#
-# Estimate enrollment for next year ####
-#--------------------------------------#
+#-----------------------------------------#
+#### Estimate enrollment for next year ####
+#-----------------------------------------#
 
 EOY = as.Date("2016-06-30") #June 30th of the last school year that has ended
 ThisCohort = format(EOY,"%Y")
@@ -230,9 +206,9 @@ JuPred = SoAveNow - SoLoss
 SePred = JuAveNow - JuLoss
 
 
-#-------------------------------------------------------------#
-#Predict average total enrollment for the next school year ####
-#-------------------------------------------------------------#
+#-----------------------------------------------------------------#
+#### Predict average total enrollment for the next school year ####
+#-----------------------------------------------------------------#
 
 #Additive model
 AddModel = SoPred + JuPred + SePred + FrAve
@@ -248,9 +224,9 @@ OptimReducModel = FrAveNow*(SoAve/FrAveEarly) +
   JuAveNow*(SeAve/JuAveEarly) + FrAveNow
 
 
-#-----------------------------------------------------------------------------------#
-#Predictions for the early part of the year (average over the first MTHS months) ####
-#-----------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------#
+#### Predictions for the early part of the year (average over the first MTHS months) ####
+#---------------------------------------------------------------------------------------#
 
 #Additive model
 FallPred1 = FrAveEarly +
@@ -289,9 +265,9 @@ FallAddedPredAve = sum(FallFroshPredAve, FallSophPredAve, FallJunPredAve, FallSe
 
 
 
-#-----------------------------------------------------#
-# Historical enrollment averages by cohort by year ####
-#-----------------------------------------------------#
+#--------------------------------------------------------#
+#### Historical enrollment averages by cohort by year ####
+#--------------------------------------------------------#
 
 ThisCohort.int
 

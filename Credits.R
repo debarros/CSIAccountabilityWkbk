@@ -1,6 +1,8 @@
 #Credits.R
 
-library("reshape2")
+# The purpose of this script is to calculate the number of credits each student has earned
+# Because credits are screwed up in PowerSchool, this doesn't really work.
+
 
 #Export from PowerSchool the entire StoredGrades table
 d1 = read.csv("credits.csv")

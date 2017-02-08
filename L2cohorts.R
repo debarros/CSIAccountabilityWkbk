@@ -2,20 +2,7 @@
 
 #Compare export from the Total Cohort Detail from the SIRS 201 report top acct wkbk
 
-source("functions.R")
 
-#workbook.csv contains the entire All Info in 1 Sheet tab from the accountability workbook, minus the top row and first 3 columns (start from cell D2)
-Workbookraw = read.csv("workbook.csv", stringsAsFactors = FALSE) 
-Workbook = Workbookraw
-
-#add the 0 padded ID field to the workbook
-Workbook$CharID = as.character(Workbook$Local.ID..optional.)
-for(i in 1:nrow(Workbook)){
-  len = nchar(Workbook$CharID[i])
-  if(len<9){
-    Workbook$CharID[i] = paste0(paste0(rep("0",times = 9-len), collapse = ""),Workbook$CharID[i])
-  }
-}
 
 #This file uses the "Excel 2007 format" option in L2.  
 #The extra headers were deleted, and the exports combined into 1 file.
@@ -24,6 +11,17 @@ L2 = read.xlsx(xlsxFile = "Total Cohort - Detail (1).xlsx", sheet = 1)
 
 #limit to students in the grad cohort
 wkbkInCohort = Workbook[Workbook$Included.in.Graduation.Cohort. %in% c("Yes","yes"),]
+
+
+#add the 0 padded ID field
+wkbkInCohort$CharID = as.character(wkbkInCohort$Local.ID..optional.)
+for(i in 1:nrow(wkbkInCohort)){
+  len = nchar(wkbkInCohort$CharID[i])
+  if(len<9){
+    wkbkInCohort$CharID[i] = paste0(paste0(rep("0",times = 9-len), collapse = ""),wkbkInCohort$CharID[i])
+  }
+}
+
 
 
 #find students in L2 who are not in the wkbk at all
