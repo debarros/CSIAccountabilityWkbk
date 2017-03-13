@@ -25,7 +25,7 @@ enddate = Sys.Date()
 dates = seq.Date(from = min(entry), to = enddate, by = 1)
 
 #This grabs the cohorts
-cohort = Workbook$Cohort.Year..year.1st.entered.9th.
+cohort = Workbook$`Cohort.Year.(year.1st.entered.9th)` 
 
 #Set up the data frame to hold the dates and the enrollment
 Enrollment = data.frame(dates)
@@ -163,105 +163,151 @@ max(enrollment_long$adjusted_dates)
 min(enrollment_long$adjusted_dates)
 
 
-#-----------------------------------------#
-#### Estimate enrollment for next year ####
-#-----------------------------------------#
+#--------------------------------------------------#
+#### Estimate enrollment by grade for next year ####
+#--------------------------------------------------#
 
 EOY = as.Date("2016-06-30") #June 30th of the last school year that has ended
 ThisCohort = format(EOY,"%Y")
+RecentCohorts = paste0("c",c(ThisCohort, as.integer(ThisCohort)-1))
 
 #Get the average enrollment over the course of the whole year for each grade level, merging across cohorts
-FrAve = mean(enrollment_long$value[enrollment_long$adjusted_dates < as.Date("0001-11-01") & enrollment_long$dates < EOY])
-SoAve = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0002-01-01") & enrollment_long$adjusted_dates < as.Date("0002-11-01") & enrollment_long$dates < EOY])
-JuAve = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0003-01-01") & enrollment_long$adjusted_dates < as.Date("0003-11-01") & enrollment_long$dates < EOY])
-SeAve = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0004-01-01") & enrollment_long$adjusted_dates < as.Date("0004-09-01") & enrollment_long$dates < EOY])
+wholeYearByGrade = list()
+wholeYearByGrade$Fr = mean(enrollment_long$value[enrollment_long$adjusted_dates < as.Date("0001-11-01") & enrollment_long$dates < EOY])
+wholeYearByGrade$FrRecent = mean(enrollment_long$value[enrollment_long$adjusted_dates < as.Date("0001-11-01") & enrollment_long$dates < EOY & enrollment_long$Cohort %in% RecentCohorts])
+wholeYearByGrade$So = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0002-01-01") & enrollment_long$adjusted_dates < as.Date("0002-11-01") & enrollment_long$dates < EOY])
+wholeYearByGrade$Ju = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0003-01-01") & enrollment_long$adjusted_dates < as.Date("0003-11-01") & enrollment_long$dates < EOY])
+wholeYearByGrade$Se = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0004-01-01") & enrollment_long$adjusted_dates < as.Date("0004-09-01") & enrollment_long$dates < EOY])
 
-FrAve - SoAve
-SoAve - JuAve
-JuAve - SeAve
+
 
 #Get the average enrollment over the first MTHS months of the year for each grade level, merging across cohorts
 MTHS = 2
-FrAveEarly = mean(enrollment_long$value[enrollment_long$adjusted_dates < as.Date(paste0("0001-",MTHS,"-01")) & enrollment_long$dates < EOY])
-SoAveEarly = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0002-01-01") & enrollment_long$adjusted_dates < as.Date(paste0("0002-",MTHS,"-01")) & enrollment_long$dates < EOY])
-JuAveEarly = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0003-01-01") & enrollment_long$adjusted_dates < as.Date(paste0("0003-",MTHS,"-01")) & enrollment_long$dates < EOY])
-SeAveEarly = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0004-01-01") & enrollment_long$adjusted_dates < as.Date(paste0("0004-",MTHS,"-01")) & enrollment_long$dates < EOY])
-
+earlyByGrade = list()
+earlyByGrade$Fr = mean(enrollment_long$value[enrollment_long$adjusted_dates < as.Date(paste0("0001-",MTHS,"-01")) & enrollment_long$dates < EOY])
+earlyByGrade$FrRecent = mean(enrollment_long$value[enrollment_long$adjusted_dates < as.Date(paste0("0001-",MTHS,"-01")) & enrollment_long$dates < EOY & enrollment_long$Cohort %in% RecentCohorts])
+earlyByGrade$So = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0002-01-01") & enrollment_long$adjusted_dates < as.Date(paste0("0002-",MTHS,"-01")) & enrollment_long$dates < EOY])
+earlyByGrade$Ju = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0003-01-01") & enrollment_long$adjusted_dates < as.Date(paste0("0003-",MTHS,"-01")) & enrollment_long$dates < EOY])
+earlyByGrade$Se = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0004-01-01") & enrollment_long$adjusted_dates < as.Date(paste0("0004-",MTHS,"-01")) & enrollment_long$dates < EOY])
 
 #Calculate how many students tend get leave between MTHS months into the year and the beginning of the following year
-FrLoss = FrAveEarly - SoAve
-SoLoss = SoAveEarly - JuAve
-JuLoss = JuAveEarly - SeAve
+earlyByGrade$FrLoss = earlyByGrade$Fr - wholeYearByGrade$So
+earlyByGrade$SoLoss = earlyByGrade$So - wholeYearByGrade$Ju
+earlyByGrade$JuLoss = earlyByGrade$Ju - wholeYearByGrade$Se
 
 #Calculate the average enrollment for each cohort in the current school year up to the current point in the year
+nowByGrade = list()
 ThisCohort.int = as.integer(ThisCohort)
-FrAveNow = mean(enrollment_long$value[enrollment_long$adjusted_dates < as.Date("0001-11-01") & enrollment_long$cohort == ThisCohort.int])
-SoAveNow = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0002-01-01") & enrollment_long$adjusted_dates < as.Date("0002-11-01") & enrollment_long$cohort == ThisCohort.int - 1])
-JuAveNow = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0003-01-01") & enrollment_long$adjusted_dates < as.Date("0003-11-01") & enrollment_long$cohort == ThisCohort.int - 2])
-SeAveNow = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0004-01-01") & enrollment_long$adjusted_dates < as.Date("0004-09-01") & enrollment_long$cohort == ThisCohort.int - 3])
+nowByGrade$Fr = mean(enrollment_long$value[enrollment_long$adjusted_dates < as.Date("0001-11-01") & enrollment_long$cohort == ThisCohort.int])
+nowByGrade$So = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0002-01-01") & enrollment_long$adjusted_dates < as.Date("0002-11-01") & enrollment_long$cohort == ThisCohort.int - 1])
+nowByGrade$Ju = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0003-01-01") & enrollment_long$adjusted_dates < as.Date("0003-11-01") & enrollment_long$cohort == ThisCohort.int - 2])
+nowByGrade$Se = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0004-01-01") & enrollment_long$adjusted_dates < as.Date("0004-09-01") & enrollment_long$cohort == ThisCohort.int - 3])
 
 #Calculate simple predictions for next year's average enrollment over the course of the entire year for each cohort
-SoPred = FrAveNow - FrLoss
-JuPred = SoAveNow - SoLoss
-SePred = JuAveNow - JuLoss
+simpleByGrade = list()
+simpleByGrade$Fr = wholeYearByGrade$Fr
+simpleByGrade$So = nowByGrade$Fr - earlyByGrade$FrLoss
+simpleByGrade$Ju = nowByGrade$So - earlyByGrade$SoLoss
+simpleByGrade$Se = nowByGrade$Ju - earlyByGrade$JuLoss
 
 
 #-----------------------------------------------------------------#
 #### Predict average total enrollment for the next school year ####
 #-----------------------------------------------------------------#
 
+wholeYearPred = list()
+
 #Additive model
-AddModel = SoPred + JuPred + SePred + FrAve
+wholeYearPred$AddModel.FrAveYear = simpleByGrade$So + simpleByGrade$Ju + simpleByGrade$Se + wholeYearByGrade$Fr
+wholeYearPred$AddModel.FrAveNow = simpleByGrade$So + simpleByGrade$Ju + simpleByGrade$Se + nowByGrade$Fr
+wholeYearPred$AddModel.FrAveYearRecent = simpleByGrade$So + simpleByGrade$Ju + simpleByGrade$Se + wholeYearByGrade$FrRecent
+
 
 #Reduction model
-ReducModel = FrAveNow*(SoAve/FrAveEarly) + 
-  SoAveNow*(JuAve/SoAveEarly) + 
-  JuAveNow*(SeAve/JuAveEarly) + FrAve
+wholeYearPred$ReducModel.FrAveYear = nowByGrade$Fr*(wholeYearByGrade$So/earlyByGrade$Fr) + 
+  nowByGrade$So*(wholeYearByGrade$Ju/earlyByGrade$So) + 
+  nowByGrade$Ju*(wholeYearByGrade$Se/earlyByGrade$Ju) + wholeYearByGrade$Fr
+wholeYearPred$ReducModel.FrAveNow = nowByGrade$Fr*(wholeYearByGrade$So/earlyByGrade$Fr) + 
+  nowByGrade$So*(wholeYearByGrade$Ju/earlyByGrade$So) + 
+  nowByGrade$Ju*(wholeYearByGrade$Se/earlyByGrade$Ju) + nowByGrade$Fr
+wholeYearPred$ReducModel.FrAveYearRecent = nowByGrade$Fr*(wholeYearByGrade$So/earlyByGrade$Fr) + 
+  nowByGrade$So*(wholeYearByGrade$Ju/earlyByGrade$So) + 
+  nowByGrade$Ju*(wholeYearByGrade$Se/earlyByGrade$Ju) + wholeYearByGrade$FrRecent
 
-
-OptimReducModel = FrAveNow*(SoAve/FrAveEarly) + 
-  SoAveNow*(JuAve/SoAveEarly) + 
-  JuAveNow*(SeAve/JuAveEarly) + FrAveNow
-
+#Average of predictions
+wholeYearPred$Average = mean(unlist(wholeYearPred))
 
 #---------------------------------------------------------------------------------------#
 #### Predictions for the early part of the year (average over the first MTHS months) ####
 #---------------------------------------------------------------------------------------#
 
+FallPred = list()
+
 #Additive model
-FallPred1 = FrAveEarly +
-  FrAveNow + SoAveEarly - FrAveEarly +
-  SoAveNow + JuAveEarly - SoAveEarly +
-  JuAveNow + SeAveEarly - JuAveEarly
+FallPred$Add1 = earlyByGrade$Fr +
+  nowByGrade$Fr + earlyByGrade$So - earlyByGrade$Fr +
+  nowByGrade$So + earlyByGrade$Ju - earlyByGrade$So +
+  nowByGrade$Ju + earlyByGrade$Se - earlyByGrade$Ju
 
 #Reduction model
-FallPred2 = FrAveEarly +
-  FrAveNow * (SoAveEarly / FrAveEarly) +
-  SoAveNow * (JuAveEarly / SoAveEarly) +
-  JuAveNow * (SeAveEarly / JuAveEarly)
+FallPred$Red1 = earlyByGrade$Fr +
+  nowByGrade$Fr * (earlyByGrade$So / earlyByGrade$Fr) +
+  nowByGrade$So * (earlyByGrade$Ju / earlyByGrade$So) +
+  nowByGrade$Ju * (earlyByGrade$Se / earlyByGrade$Ju)
 
 #Variation on additive model
-FallPred3 = FrAveNow +
-  FrAveNow + SoAveEarly - FrAveEarly +
-  SoAveNow + JuAveEarly - SoAveEarly +
-  JuAveNow + SeAveEarly - JuAveEarly
+FallPred$Add2 = nowByGrade$Fr +
+  nowByGrade$Fr + earlyByGrade$So - earlyByGrade$Fr +
+  nowByGrade$So + earlyByGrade$Ju - earlyByGrade$So +
+  nowByGrade$Ju + earlyByGrade$Se - earlyByGrade$Ju
 
 #Variation of reduction model
-FallPred4 = FrAveNow +
-  FrAveNow * (SoAveEarly / FrAveEarly) +
-  SoAveNow * (JuAveEarly / SoAveEarly) +
-  JuAveNow * (SeAveEarly / JuAveEarly)
+FallPred$Red2 = nowByGrade$Fr +
+  nowByGrade$Fr * (earlyByGrade$So / earlyByGrade$Fr) +
+  nowByGrade$So * (earlyByGrade$Ju / earlyByGrade$So) +
+  nowByGrade$Ju * (earlyByGrade$Se / earlyByGrade$Ju)
 
 #Average of predictions
-FallPredAve = (FallPred4 + FallPred3 + FallPred2 + FallPred1)/4
+FallPred$AveragedTotal = mean(unlist(FallPred))
 
 
 #Averaged predictions by grade level
-FallFroshPredAve = (FrAveEarly + FrAveNow)/2
-FallSophPredAve = ((FrAveNow + SoAveEarly - FrAveEarly) + FrAveNow * (SoAveEarly / FrAveEarly))/2
-FallJunPredAve = ((SoAveNow + JuAveEarly - SoAveEarly) + SoAveNow * (JuAveEarly / SoAveEarly))/2
-FallSenPredAve = ((JuAveNow + SeAveEarly - JuAveEarly) + (JuAveNow * (SeAveEarly / JuAveEarly)))/2
-FallAddedPredAve = sum(FallFroshPredAve, FallSophPredAve, FallJunPredAve, FallSenPredAve)
+FallPred$Fr = (earlyByGrade$Fr + nowByGrade$Fr)/2
+FallPred$So = ((nowByGrade$Fr + earlyByGrade$So - earlyByGrade$Fr) + nowByGrade$Fr * (earlyByGrade$So / earlyByGrade$Fr))/2
+FallPred$Ju = ((nowByGrade$So + earlyByGrade$Ju - earlyByGrade$So) + nowByGrade$So * (earlyByGrade$Ju / earlyByGrade$So))/2
+FallPred$Se = ((nowByGrade$Ju + earlyByGrade$Se - earlyByGrade$Ju) + (nowByGrade$Ju * (earlyByGrade$Se / earlyByGrade$Ju)))/2
+FallPred$SumOfGradeAverages = sum(FallPred$Fr, FallPred$So, FallPred$Ju, FallPred$Se)
+
+
+#-------------------------#
+#### Print Predictions ####
+#-------------------------#
+
+
+for(i in 0:length(simpleByGrade)){
+  if(i == 0) {
+    print("Simple Predictions")
+  } else {
+    print(paste0(names(simpleByGrade)[i]," - ",round(simpleByGrade[[i]], digits = 0)))    
+    }
+}
+
+
+for(i in 1:length(wholeYearPred)){
+  if(i == 0) {
+    print("Predictions for Yearlong Average Enrollment")
+  } else {
+  print(paste0(names(wholeYearPred)[i]," - ",round(wholeYearPred[[i]], digits = 0)))
+  }
+}
+
+for(i in 1:length(FallPred)){
+  if(i == 0) {
+    print("Predictions for Fall Enrollment")
+  } else {
+  print(paste0(names(FallPred)[i]," - ",round(FallPred[[i]], digits = 0)))
+  }
+}
 
 
 
