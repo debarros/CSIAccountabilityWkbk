@@ -5,20 +5,26 @@
 #Export a ton of info from the Students table in PS
 psStudentsRaw = read.csv("PowerSchoolStudents.csv")
 
-#Get a list of the students who are in both the Workbook and PS
-inBoth = Workbook$Local.ID..optional.[which(Workbook$Local.ID..optional. %in% psStudentsRaw$student_number)]
+#Get a list of the students active in PS 
+InPS = psStudentsRaw$student_number
 
-#Get a list of the students from the workbook
-InWorkbook = Workbook$Local.ID..optional.[(Workbook$Still.Enrolled. == "yes"), ]
+#Get a list of the students from the workbook 
+InWorkbook = Workbook$`Local.ID.(optional)`
+
+#Get a list of the students who are in both the Workbook and PS
+inBoth = intersect(Workbook$`Local.ID.(optional)`, psStudentsRaw$student_number)
 
 #Get a list of the students from the workbook who are active 
-ActiveInWorkbook = Workbook$Local.ID..optional.[(Workbook$Still.Enrolled. == "yes"), ]
+ActiveInWorkbook = Workbook$`Local.ID.(optional)`[(Workbook$`Still.Enrolled?` == "yes") ]
+
+#Get a list of the students from the workbook who are inactive 
+InactiveInWorkbook = setdiff(InWorkbook, ActiveInWorkbook)
 
 #Get a list of the students who are enrolled in PS, appear in the wkbk, but are not enrolled in the wkbk
-InPSNotActiveInWkbk = Workbook$Local.ID..optional.[(Workbook$Still.Enrolled. == "yes") &! (Workbook$Local.ID..optional. %in% inBoth), ]
+InPSNotActiveInWkbk = intersect(InPS, InactiveInWorkbook)
 
 #Get a list of students who are enrolled in PS but nowhere in the wkbk
-InJustPS = psStudentsRaw$student_number[which(!(psStudentsRaw$student_number %in% inBoth))]
+InJustPS = setdiff(InPS, InWorkbook)
 
 #Get a list of students who are active in the workbook, appear in PS, but are not enrolled in PS
 #write code here
@@ -28,3 +34,11 @@ InJustPS = psStudentsRaw$student_number[which(!(psStudentsRaw$student_number %in
 
 #Compile information into one readable table
 #write code here
+
+
+
+
+
+
+
+
