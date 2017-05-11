@@ -16,6 +16,7 @@ Workbookraw.xlsx = read.xlsx(
 Workbook = Workbookraw.xlsx[!is.na(Workbookraw.xlsx$`Local.ID.(optional)`),-c(1,2,3)]
 
 # Remove those who never attended
+# Note: don't do this if you are updating regents scores or other things in the workbook
 Workbook = Workbook[!(VbetterComp(Workbook$Discharge.Reason, "never attended")),]
 
 #Format the date variables
