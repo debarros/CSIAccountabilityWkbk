@@ -6,15 +6,13 @@
 #----------------------#
 
 #create the entry date variable
-entry = as.Date(Workbook$Date.First.Enrolled.at.GTH, format = "%m/%d/%Y")
-entry = as.Date(Workbook$Date.First.Enrolled.at.GTH, origin = "1899-12-30")
-which(is.na(entry))
+entry = Workbook$Date.First.Enrolled.at.GTH
+which(is.na(entry)) # should be integer(0)
 
 #Create the exit date variable, and set students who haven't left to exit at the end of the year
-exit = as.Date(Workbook$Date.left.GTH, format = "%m/%d/%Y")
-exit = as.Date(Workbook$Date.left.GTH, origin = "1899-12-30")
+exit = Workbook$Date.left.GTH
 exit[is.na(exit)] = as.Date("6/30/2017", format = "%m/%d/%Y")
-betterMax(exit)
+betterMax(exit) #should be the end of the current year
 
 #--------------------------------------------------------#
 #### Graph Total enrollment overlaying calendar years ####
@@ -26,36 +24,19 @@ dates = seq.Date(from = min(entry), to = enddate, by = 1)
 
 #This grabs the cohorts
 cohort = Workbook$`Cohort.Year.(year.1st.entered.9th)` 
+cohortSet = unique(cohort)
 
 #Set up the data frame to hold the dates and the enrollment
 Enrollment = data.frame(dates)
-Enrollment$count = NA
-Enrollment$c2006 = NA
-Enrollment$c2007 = NA
-Enrollment$c2008 = NA
-Enrollment$c2009 = NA
-Enrollment$c2010 = NA
-Enrollment$c2011 = NA
-Enrollment$c2012 = NA
-Enrollment$c2013 = NA
-Enrollment$c2014 = NA
-Enrollment$c2015 = NA
-Enrollment$c2016 = NA
+Enrollment[,c("count",paste0("c",cohortSet))] = NA
 
-#Calculate the number of students enrolled on each day
+# Calculate the number of students enrolled on each day
+# Is there a way to do this without loops?
 for (i in 1:nrow(Enrollment)){
   Enrollment$count[i] = sum(entry <= Enrollment$dates[i] & exit >= Enrollment$dates[i])
-  Enrollment$c2006[i] = sum(entry <= Enrollment$dates[i] & exit >= Enrollment$dates[i] & cohort == 2006)
-  Enrollment$c2007[i] = sum(entry <= Enrollment$dates[i] & exit >= Enrollment$dates[i] & cohort == 2007)
-  Enrollment$c2008[i] = sum(entry <= Enrollment$dates[i] & exit >= Enrollment$dates[i] & cohort == 2008)
-  Enrollment$c2009[i] = sum(entry <= Enrollment$dates[i] & exit >= Enrollment$dates[i] & cohort == 2009)
-  Enrollment$c2010[i] = sum(entry <= Enrollment$dates[i] & exit >= Enrollment$dates[i] & cohort == 2010)
-  Enrollment$c2011[i] = sum(entry <= Enrollment$dates[i] & exit >= Enrollment$dates[i] & cohort == 2011)
-  Enrollment$c2012[i] = sum(entry <= Enrollment$dates[i] & exit >= Enrollment$dates[i] & cohort == 2012)
-  Enrollment$c2013[i] = sum(entry <= Enrollment$dates[i] & exit >= Enrollment$dates[i] & cohort == 2013)
-  Enrollment$c2014[i] = sum(entry <= Enrollment$dates[i] & exit >= Enrollment$dates[i] & cohort == 2014)
-  Enrollment$c2015[i] = sum(entry <= Enrollment$dates[i] & exit >= Enrollment$dates[i] & cohort == 2015)
-  Enrollment$c2016[i] = sum(entry <= Enrollment$dates[i] & exit >= Enrollment$dates[i] & cohort == 2016)
+  for(j in cohortSet){
+    Enrollment[i,paste0("c",j)] = sum(entry <= Enrollment$dates[i] & exit >= Enrollment$dates[i] & cohort == j)  
+  }
 }
 
 #In order to categorize by school year, create an offset date to move the school year start to the calendar year start
@@ -94,32 +75,23 @@ p5
 #--------------------------------------------#
 
 # Make enrollment_long
-str(Enrollment)
-colnames(Enrollment)
-yrEnroll = Enrollment[,-c(2,14, 15, 16)] #these numbers will have to be adjusted when a new cohort year is added
-str(yrEnroll) #this should show "dates" and one column for each cohort year
+yrEnroll = Enrollment[,c("dates",paste0("c",cohortSet))] 
 enrollment_long = melt(yrEnroll, id = "dates")  
-str(enrollment_long)
 colnames(enrollment_long)[2] = "Cohort"
 
-enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2006"),]
-enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2007"),]
+# Remove early cohorts
+enrollment_long = enrollment_long[!(enrollment_long$Cohort %in% c("c2006","c2007")),]
 
-enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2008" & enrollment_long$dates < as.Date("2008-08-30")),]
-enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2009" & enrollment_long$dates < as.Date("2009-08-30")),]
-enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2010" & enrollment_long$dates < as.Date("2010-08-30")),]
-enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2011" & enrollment_long$dates < as.Date("2011-08-30")),]
-enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2012" & enrollment_long$dates < as.Date("2012-08-30")),]
-enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2013" & enrollment_long$dates < as.Date("2013-08-30")),]
-enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2014" & enrollment_long$dates < as.Date("2014-08-30")),]
-enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2015" & enrollment_long$dates < as.Date("2015-08-30")),]
-enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2016" & enrollment_long$dates < as.Date("2016-08-30")),]
+# For each cohort, remove entries prior to August 30th of that year (because that data is suspect)
+for(i in cohortSet){
+  enrollment_long = enrollment_long[!(enrollment_long$Cohort == paste0("c",i) & enrollment_long$dates < as.Date(paste0(i,"-08-30"))),]
+}
 
-enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2008" & enrollment_long$dates > as.Date("2012-06-20")),]
-enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2009" & enrollment_long$dates > as.Date("2013-06-20")),]
-enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2010" & enrollment_long$dates > as.Date("2014-06-20")),]
-enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2011" & enrollment_long$dates > as.Date("2015-06-20")),]
-enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2012" & enrollment_long$dates > as.Date("2016-06-20")),]
+# For each cohort, remove entries after to June 20th of that cohort's 4th school year (because that data is irrelevant)
+for(i in cohortSet){
+  enrollment_long = enrollment_long[!(enrollment_long$Cohort == paste0("c",i) & enrollment_long$dates > as.Date(paste0(i+4,"-06-20"))),]
+}
+
 
 p6 = ggplot(data = enrollment_long, aes(x = dates, y = value, colour = Cohort)) + 
   geom_line(size = 2) +
@@ -140,13 +112,14 @@ p6
 #### Graph 4-year enrollment overlaying cohorts ####
 #--------------------------------------------------#
 
-str(enrollment_long)
+# Convert the cohort variable to numeric
 enrollment_long$cohort = as.numeric(substr(enrollment_long$Cohort, 2, 5))
 
+#remove the early cohorts, since they were quite different
 enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2008"),]
 enrollment_long = enrollment_long[!(enrollment_long$Cohort == "c2009"),]
 
-
+#Change the dates to be the beginning of HS years numbered starting from 1
 enrollment_long$adjusted_dates = enrollment_long$dates - 365*(enrollment_long$cohort + 1)
 
 
@@ -182,7 +155,7 @@ wholeYearByGrade$Se = mean(enrollment_long$value[enrollment_long$adjusted_dates 
 
 
 #Get the average enrollment over the first MTHS months of the year for each grade level, merging across cohorts
-MTHS = 2
+MTHS = 2 #number of months at the beginning of the year
 earlyByGrade = list()
 earlyByGrade$Fr = mean(enrollment_long$value[enrollment_long$adjusted_dates < as.Date(paste0("0001-",MTHS,"-01")) & enrollment_long$dates < EOY])
 earlyByGrade$FrRecent = mean(enrollment_long$value[enrollment_long$adjusted_dates < as.Date(paste0("0001-",MTHS,"-01")) & enrollment_long$dates < EOY & enrollment_long$Cohort %in% RecentCohorts])
@@ -190,7 +163,7 @@ earlyByGrade$So = mean(enrollment_long$value[enrollment_long$adjusted_dates > as
 earlyByGrade$Ju = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0003-01-01") & enrollment_long$adjusted_dates < as.Date(paste0("0003-",MTHS,"-01")) & enrollment_long$dates < EOY])
 earlyByGrade$Se = mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0004-01-01") & enrollment_long$adjusted_dates < as.Date(paste0("0004-",MTHS,"-01")) & enrollment_long$dates < EOY])
 
-#Calculate how many students tend get leave between MTHS months into the year and the beginning of the following year
+#Calculate how many students tend to leave between MTHS months into the year and the beginning of the following year
 earlyByGrade$FrLoss = earlyByGrade$Fr - wholeYearByGrade$So
 earlyByGrade$SoLoss = earlyByGrade$So - wholeYearByGrade$Ju
 earlyByGrade$JuLoss = earlyByGrade$Ju - wholeYearByGrade$Se
@@ -293,7 +266,7 @@ for(i in 0:length(simpleByGrade)){
 }
 
 
-for(i in 1:length(wholeYearPred)){
+for(i in 0:length(wholeYearPred)){
   if(i == 0) {
     print("Predictions for Yearlong Average Enrollment")
   } else {
@@ -301,7 +274,7 @@ for(i in 1:length(wholeYearPred)){
   }
 }
 
-for(i in 1:length(FallPred)){
+for(i in 0:length(FallPred)){
   if(i == 0) {
     print("Predictions for Fall Enrollment")
   } else {
@@ -317,12 +290,14 @@ for(i in 1:length(FallPred)){
 
 ThisCohort.int
 
-for(i in 5:1){
+for(i in 5:0){
   print(paste0("school year ", ThisCohort.int - i))
   print(mean(enrollment_long$value[enrollment_long$adjusted_dates < as.Date("0001-11-01") & enrollment_long$cohort == ThisCohort.int - i]))
   print(mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0002-01-01") & enrollment_long$adjusted_dates < as.Date("0002-11-01") & enrollment_long$cohort == ThisCohort.int - i - 1]))
   print(mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0003-01-01") & enrollment_long$adjusted_dates < as.Date("0003-11-01") & enrollment_long$cohort == ThisCohort.int - i - 2]))
   print(mean(enrollment_long$value[enrollment_long$adjusted_dates > as.Date("0004-01-01") & enrollment_long$adjusted_dates < as.Date("0004-09-01") & enrollment_long$cohort == ThisCohort.int - i - 3]))
 }
+
+
 
 
