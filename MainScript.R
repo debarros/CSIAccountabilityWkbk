@@ -28,6 +28,7 @@ for(i in dateVars){ Workbook[,i] = as.Date(Workbook[,i], origin = "1899-12-30") 
 
 # Below are variables that are important to get from powerschool
 # Note that the code currently assumes subsets of this data for the powerschool regents and powerschool students files
+# However, they should be rewritten to use the more general PowerSchoolAll.xlsx, which includes all the variables below.
 # 
 # student_number
 # lastfirst
@@ -58,4 +59,4 @@ for(i in dateVars){ Workbook[,i] = as.Date(Workbook[,i], origin = "1899-12-30") 
 # Ethnicity
 # ExitCode
 # ExitDate
-
+powerschool = read.xlsx(xlsxFile = "PowerSchoolAll.xlsx", sheet = 1)
