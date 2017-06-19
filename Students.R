@@ -9,7 +9,8 @@
 #This script finds discrepancies between PowerSchool and the Accountability Workbook in terms of which students are current
 
 #Export a ton of info from the Students table in PS
-psStudentsRaw = read.csv("PowerSchoolStudents.csv")
+# psStudentsRaw = read.csv("PowerSchoolStudents.csv")
+psStudentsRaw = powerschool
 
 #Get a list of the students in PS 
 InPS = psStudentsRaw$student_number
@@ -30,16 +31,20 @@ inBoth = intersect(InWorkbook, InPS)
 InactiveInWorkbook = setdiff(InWorkbook, ActiveInWorkbook)
 
 #Get a list of the students who are enrolled in PS, appear in the wkbk, but are not enrolled in the wkbk
-ActiveInPS.InactiveInWkbk = intersect(ActiveInPS, InactiveInWorkbook)
+ActiveInPS.InactiveInWkbk = intersect(ActiveInPS, InactiveInWorkbook) 
+#should be 0
 
 #Get a list of students who are enrolled in PS but nowhere in the wkbk
 ActiveInPS.NotInWorkbook = setdiff(ActiveInPS, InWorkbook)
+#should be 0
 
 #Get a list of students who are active in the workbook, appear in PS, but are not enrolled in PS
 ActiveInWorkbook.InactiveInPS = setdiff(intersect(ActiveInWorkbook,InPS), ActiveInPS)
+#should be 0
 
 #Get a list of students who are active in the workbook, but are not in PS at all
 ActiveInWorkbook.NotInPS = setdiff(ActiveInWorkbook, InPS)
+#should be 0
 
 #Compile information into one readable table
 #write code here
@@ -56,12 +61,15 @@ Workbook.Problems = Workbook.InCohort.Unenrolled[!VbetterComp(toupper(Workbook.I
 unique(Workbook.Problems$`Cohort.Year.(year.1st.entered.9th)`)
 Workbook.Problems = Workbook.Problems[Workbook.Problems$`Cohort.Year.(year.1st.entered.9th)` >= 2012,]
 Workbook.Problems = Workbook.Problems[,c("Local.ID.(optional)","Last.Name","First.Name","Cohort.Year.(year.1st.entered.9th)","Date.left.GTH","Discharge.Reason")]
-
+# Note that Workbook.Problems doesn't mean that there is a problem with the workbook
+# This just refers to the students who are in the cohort, but not enrolled
+write.csv(Workbook.Problems, file = "workbookproblems.csv")
 
 ##################################
 # Identify Off-Track Students ####
 ##################################
 
-
-
-
+offtrack = Workbook.InCohort[Workbook.InCohort$`Grade.(leave.blank.if.no.longer.enrolled)` %in% c(9:12) & toupper(Workbook.InCohort$`Still.Enrolled?`) == "YES",]
+offtrack = offtrack[,c("Local.ID.(optional)", "Last.Name", "First.Name", "Cohort.Year.(year.1st.entered.9th)", "Grade.(leave.blank.if.no.longer.enrolled)")]
+offtrack$off = (offtrack$`Cohort.Year.(year.1st.entered.9th)` + offtrack$`Grade.(leave.blank.if.no.longer.enrolled)`) != 2025 # adjust this number
+write.csv(offtrack[offtrack$off,], file = "offtrack.csv")
