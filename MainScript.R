@@ -26,7 +26,7 @@ for(i in dateVars){ Workbook[,i] = as.Date(Workbook[,i], origin = "1899-12-30") 
 
 
 
-# Below are variables that are important to get from powerschool
+# Below are variables that are important to get from the students table in powerschool
 # Note that the code currently assumes subsets of this data for the powerschool regents and powerschool students files
 # However, they should be rewritten to use the more general PowerSchoolAll.xlsx, which includes all the variables below.
 # 
@@ -60,3 +60,21 @@ for(i in dateVars){ Workbook[,i] = as.Date(Workbook[,i], origin = "1899-12-30") 
 # ExitCode
 # ExitDate
 powerschool = read.xlsx(xlsxFile = "PowerSchoolAll.xlsx", sheet = 1)
+
+
+# Export all F2 grades from the storedgrades table in PowerSchool
+F2 = read.xlsx(xlsxFile = "F2grades.xlsx")
+F2$DateStored = as.Date(F2$DateStored, origin = "1899-12-30")
+F2$StudentName = powerschool$lastfirst[match(F2$`[1]Student_Number`, table = powerschool$student_number)]
+
+
+# Sign in to google
+gs_auth() #this will launch a browser so you can sign into your account
+
+# Get the course-subject alignments
+CourseSubject = gs_url("https://docs.google.com/a/greentechhigh.org/spreadsheets/d/17QhVYZkjbx34M6wBvtHUYa_XrRUlRbOtuOsQ4P5l-nk/edit?usp=sharing")
+alignment = gs_read(ss = CourseSubject, ws = 1)
+alignment2 = gs_read(ss = CourseSubject, ws = 2)
+alignment$Course[alignment$Course == "AP Global History I"][1] = "AP Global History I "
+FullAlignment = rbind.data.frame(alignment, alignment2, stringsAsFactors = F)
+
