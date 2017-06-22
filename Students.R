@@ -1,6 +1,8 @@
 #Students.R
 
-#First run MainScript.R
+# This is for looking at problems with the cohorts, such as students missing transfer info
+
+# Note: First run MainScript.R
 
 #########################################
 # Reconcile Workbook and PowerSchool ####

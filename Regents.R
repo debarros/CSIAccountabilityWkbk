@@ -1,5 +1,6 @@
-#Regents
-#Run the MainScript first
+# Regents.R
+# This is for reconciling regents scores in the regents database, powerschool, and the accountability workbook
+# Note: Run the MainScript first
 
 #--------------------------------#
 #### Load the data from files ####
