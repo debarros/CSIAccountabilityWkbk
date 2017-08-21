@@ -59,7 +59,7 @@ for(i in dateVars){ Workbook[,i] = as.Date(Workbook[,i], origin = "1899-12-30") 
 # Ethnicity
 # ExitCode
 # ExitDate
-powerschool = read.xlsx(xlsxFile = "PowerSchoolAll.xlsx", sheet = 1)
+powerschoolraw = read.xlsx(xlsxFile = "PowerSchoolAll.xlsx", sheet = 1)
 
 
 # Export all F2 grades from the storedgrades table in PowerSchool
@@ -78,3 +78,11 @@ alignment2 = gs_read(ss = CourseSubject, ws = 2)
 alignment$Course[alignment$Course == "AP Global History I"][1] = "AP Global History I "
 FullAlignment = rbind.data.frame(alignment, alignment2, stringsAsFactors = F)
 
+
+
+#Get the the Output query from the Regents database (located at data drive/database project/regents.accdb)
+#Paste it into the files RegentsDB.csv in the folder for this project
+#note: if new exams (not just new scores) have been entered, 
+#      the sql code for the Output query will need to be modified 
+#      to pull that exam's scores and dates from TestScoreOutput and TestDateOutput
+RegentsDBraw = read.csv("RegentsDB.csv", stringsAsFactors = FALSE) 

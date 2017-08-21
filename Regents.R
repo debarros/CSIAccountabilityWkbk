@@ -2,26 +2,10 @@
 # This is for reconciling regents scores in the regents database, powerschool, and the accountability workbook
 # Note: Run the MainScript first
 
-#--------------------------------#
-#### Load the data from files ####
-#--------------------------------#
-
-#Get the the Output query from the Regents database (located at data drive/database project/regents.accdb)
-#Paste it into the files RegentsDB.csv in the folder for this project
-#note: if new exams (not just new scores) have been entered, 
-#      the sql code for the Output query will need to be modified 
-#      to pull that exam's scores and dates from TestScoreOutput and TestDateOutput
-RegentsDBraw = read.csv("RegentsDB.csv", stringsAsFactors = FALSE) 
-
-
-#see How to Export All Regents Scores from PowerSchool (Google Drive > Instructions > PowerSchool > Exporting)
-#Put the output into the file PowerSchoolRegents.csv in the folder for this project
-PowerSchoolraw = read.csv("PowerSchoolRegents.csv", stringsAsFactors = FALSE) 
-
 #save the raw versions in case the raw data is needed later
 RegentsDB = RegentsDBraw
 Workbook.sub = Workbook
-PowerSchool = PowerSchoolraw
+PowerSchool = powerschoolraw
 
 
 #------------------------------------#
@@ -120,8 +104,6 @@ if(sum(!MbetterComp(CompareMatrix, dbMatrix) & !is.na(CompareMatrix))){         
 
 if(sum(!MbetterComp(CompareMatrix, wkbkMatrix) & !is.na(CompareMatrix))){                    #if there are any best scores not in the workbook
   
-  View(RegentsDB[RegentsDB$ID %in% rownames(which(!MbetterComp(CompareMatrix, wkbkMatrix) & !is.na(CompareMatrix), arr.ind = T)),])
-  
   #Create output to be pasted into the Workbook
   wkbkOutput = data.frame(ID = rownames(CompareMatrix))   #set up the output object
   temp = CompareMatrix                                    #create a temporary version of the best scores matrix
@@ -188,14 +170,16 @@ psMatrix = matrix(                                #set up the matrix to hold the
   data = integer(0))   
 rownames(psMatrix) = studentlist                  #in the matrix, name the rows according to the student ID
 colnames(psMatrix) = Categories                   #in the matrix, name the columns according to the exam name
+psCategoryNames  = c("Regents_Algebra_Score", "Regents_Geometry_Score", "Regents_Algebra2/Trigonometry_Score",
+                     "Regents_Living_Environment_Score", "Regents_Earth_Science_Score", "Regents_Chemistry_Score",
+                     "Regents_Physics_Score", "Regents_US_History_Score", "Regents_Global_History_&_Geography_Score",
+                     "Regents_Comprehensive_English_Score")
 for (i in studentlist){                           #for each student
   if (i %in% PowerSchool$ID){                     #if that student appears in the powerschool data,
     psMatrix[which(rownames(psMatrix) == i),] =   #load their scores into the appropriate row in the powerschool score matrix
-      # Note: This should probably use variable names instead of column numbers
-      as.integer(PowerSchool[PowerSchool$ID == i,c(15, 17, 19, 18, 8, 16, 21, 14, 7, 20),i])  
+      as.integer(PowerSchool[PowerSchool$ID == i,psCategoryNames,i])  
   } #end if
 } #end of for loop
-
 
 
 #-------------------------------------------------------#
@@ -309,8 +293,8 @@ badStudents$First = NA
 badStudents$Last = NA
 
 for(i in studentsToUse){
-  badStudents$First[which(badStudents$StudentNumber == i)] = Workbook.sub$First.Name[which(Workbook.sub$Local.ID..optional. == i)]
-  badStudents$Last[which(badStudents$StudentNumber == i)] = Workbook.sub$Last.Name[which(Workbook.sub$Local.ID..optional. == i)]
+  badStudents$First[badStudents$StudentNumber == i] = Workbook$First.Name[Workbook$`Local.ID.(optional)` == i]
+  badStudents$Last[badStudents$StudentNumber == i] = Workbook$Last.Name[Workbook$`Local.ID.(optional)` == i]
 } #end of for loop
 
 vars = names(badStudents)
