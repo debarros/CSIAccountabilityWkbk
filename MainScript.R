@@ -11,7 +11,7 @@ source("functions.R")
 #Get the most up to date stuff from the actual workbook
 #Note: you must have access to the data drive on the school network
 Workbookraw.xlsx = read.xlsx(
-  xlsxFile = "J:/Accountability Spreadsheet/working copy/Green Tech Cohort Data Collection Workbook.xlsx", 
+  xlsxFile = "J:/Accountability Spreadsheet/working copy/Green Tech Cohort Data Collection Workbook.xlsx",
   sheet = "All info in 1 sheet",startRow = 2)
 Workbook = Workbookraw.xlsx[!is.na(Workbookraw.xlsx$`Local.ID.(optional)`),-c(1,2,3)]
 
