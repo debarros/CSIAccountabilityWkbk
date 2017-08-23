@@ -39,7 +39,7 @@ for (i in 2:length(SATsort$ID)) {
 SATsort <- subset(SATsort, (SATsort$Rank > 0) & (SATsort$Rank < 3))
 
 # Sort by Cohort, ID, then Date
-SATsort <- SATsort[with(SATsort, order(Cohort, ID, Year)),]
+SATsort <- SATsort[with(SATsort, order(Cohort, ID, Year, Month)),]
 
 # Change rank of score to indicate chronological order
 SATsort$Rank[1] <- 1
@@ -79,12 +79,14 @@ for (i in Years) {
   newFrame$Read1  <- as.integer(SAT1$Reading[match(newFrame$ID, SAT1$ID)])
   newFrame$Math1  <- as.integer(SAT1$Math[match(newFrame$ID, SAT1$ID)])
   newFrame$Write1 <- as.integer(SAT1$Writing[match(newFrame$ID, SAT1$ID)])
+  newFrame$Month1 <- as.integer(SAT1$Month[match(newFrame$ID, SAT1$ID)])
   newFrame$Year1  <- as.integer(SAT1$Year[match(newFrame$ID, SAT1$ID)])
   
   # Add second  SATs
   newFrame$Read2  <- as.integer(SAT2$Reading[match(newFrame$ID, SAT2$ID)])
   newFrame$Math2  <- as.integer(SAT2$Math[match(newFrame$ID, SAT2$ID)])
   newFrame$Write2 <- as.integer(SAT2$Writing[match(newFrame$ID, SAT2$ID)])
+  newFrame$Month2 <- as.integer(SAT2$Month[match(newFrame$ID, SAT2$ID)])
   newFrame$Year2  <- as.integer(SAT2$Year[match(newFrame$ID, SAT2$ID)])
   
   # Write output to a CSV
