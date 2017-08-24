@@ -62,7 +62,6 @@ Years <- c(2006:as.integer(format(Sys.Date(), "%Y")))
 # Create a CSV for each cohort year with best and second best SAT scores
 newFrame <- NULL
 for (i in Years) {
-  i
   # Get the sheet with the cohort
   sheetName <- paste0(as.character(i), " Cohort")
   
@@ -79,6 +78,7 @@ for (i in Years) {
   newFrame$Read1  <- as.integer(SAT1$Reading[match(newFrame$ID, SAT1$ID)])
   newFrame$Math1  <- as.integer(SAT1$Math[match(newFrame$ID, SAT1$ID)])
   newFrame$Write1 <- as.integer(SAT1$Writing[match(newFrame$ID, SAT1$ID)])
+  newFrame$Total1 <- as.integer(SAT1$Score[match(newFrame$ID, SAT1$ID)])
   newFrame$Month1 <- as.integer(SAT1$Month[match(newFrame$ID, SAT1$ID)])
   newFrame$Year1  <- as.integer(SAT1$Year[match(newFrame$ID, SAT1$ID)])
   
@@ -86,6 +86,7 @@ for (i in Years) {
   newFrame$Read2  <- as.integer(SAT2$Reading[match(newFrame$ID, SAT2$ID)])
   newFrame$Math2  <- as.integer(SAT2$Math[match(newFrame$ID, SAT2$ID)])
   newFrame$Write2 <- as.integer(SAT2$Writing[match(newFrame$ID, SAT2$ID)])
+  newFrame$Total2 <- as.integer(SAT2$Score[match(newFrame$ID, SAT2$ID)])
   newFrame$Month2 <- as.integer(SAT2$Month[match(newFrame$ID, SAT2$ID)])
   newFrame$Year2  <- as.integer(SAT2$Year[match(newFrame$ID, SAT2$ID)])
   
