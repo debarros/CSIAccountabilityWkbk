@@ -64,8 +64,9 @@ powerschoolraw = read.xlsx(xlsxFile = "PowerSchoolAll.xlsx", sheet = 1)
 
 # Export all F2 grades from the storedgrades table in PowerSchool
 F2 = read.xlsx(xlsxFile = "F2grades.xlsx")
+F2 = F2[F2$`[1]Student_Number` != 0,]
 F2$DateStored = as.Date(F2$DateStored, origin = "1899-12-30")
-F2$StudentName = powerschool$lastfirst[match(F2$`[1]Student_Number`, table = powerschool$student_number)]
+F2$StudentName = powerschoolraw$lastfirst[match(F2$`[1]Student_Number`, table = powerschoolraw$student_number)]
 
 
 # Sign in to google
