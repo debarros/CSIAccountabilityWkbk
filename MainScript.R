@@ -22,8 +22,10 @@ rownames(Workbook) = NULL
 
 #Format the date variables
 dateVars = c("Date.First.Enrolled.at.GTH", "Date.left.GTH", "Date.1st.Enrolled.in.9th.Grade.(anywhere)","Date.of.Confirmation")
-for(i in dateVars){ Workbook[,i] = as.Date(Workbook[,i], origin = "1899-12-30") }
 
+for(i in dateVars){
+  Workbook[,i] = as.Date(Workbook[,i], origin = "1899-12-30") 
+}
 
 
 # Below are variables that are important to get from the students table in powerschool
@@ -87,3 +89,9 @@ FullAlignment = rbind.data.frame(alignment, alignment2, stringsAsFactors = F)
 #      the sql code for the Output query will need to be modified 
 #      to pull that exam's scores and dates from TestScoreOutput and TestDateOutput
 RegentsDBraw = read.csv("RegentsDB.csv", stringsAsFactors = FALSE) 
+
+
+
+
+# Load the current term's enrollment records (exported from the cc table in powerschool)
+cc.raw = read.xlsx(xlsxFile = "PowerSchoolAll.xlsx", sheet = "cc")
