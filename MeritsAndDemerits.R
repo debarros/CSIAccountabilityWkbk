@@ -78,9 +78,9 @@ for(i in 2:ncol(AllDemeritTotals)){
   x = c(x,max(nchar(strsplit(x = paste0(as.integer(VbetterComp(entries,0)), collapse = ""), split = "0", fixed = T)[[1]])))
 }
 
-z = apply(X = AllDemeritTotals[2:ncol(AllDemeritTotals)], MARGIN = 2, FUN = sum)
-
-z[VbetterComp(z,0)]
+TotalDemeritsByStudent = apply(X = AllDemeritTotals[2:ncol(AllDemeritTotals)], MARGIN = 2, FUN = sum, na.rm = T)
+summary(TotalDemeritsByStudent)
+maxEarner = names(TotalDemeritsByStudent[TotalDemeritsByStudent == max(TotalDemeritsByStudent)])
 
 x = data.frame(consecWeeks = x)
 ggplot(data = x, mapping = aes(consecWeeks)) + geom_histogram(bins = 34, col="red") + 
@@ -88,7 +88,12 @@ ggplot(data = x, mapping = aes(consecWeeks)) + geom_histogram(bins = 34, col="re
 
 
 summary(as.factor(x$consecWeeks))
+summary(x)
+sqrt(var(x))
 
-
+for(i in 1:length(demeritList)){
+  x = demeritList[[i]]
+  print(paste0(c(i,max(x[x$ID == as.integer(maxEarner),4:ncol(x)],na.rm = T)), collapse = " - "))
+}
 
 
