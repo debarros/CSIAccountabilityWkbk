@@ -7,6 +7,7 @@ library("reshape2")
 library("openxlsx")
 library(dBtools)
 library(googlesheets)
+library(data.table)
 
 # #This function takes the max value if there are any non NA values, and returns NA if there are only NA values
 # betterMax = function(x){
