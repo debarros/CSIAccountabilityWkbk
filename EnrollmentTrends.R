@@ -11,7 +11,7 @@ which(is.na(entry)) # should be integer(0)
 
 #Create the exit date variable, and set students who haven't left to exit at the end of the year
 exit = Workbook$Date.left.GTH
-exit[is.na(exit)] = as.Date("6/30/2017", format = "%m/%d/%Y")
+exit[is.na(exit)] = as.Date("6/30/2018", format = "%m/%d/%Y")
 betterMax(exit) #should be the end of the current year
 
 #--------------------------------------------------------#
@@ -24,7 +24,10 @@ dates = seq.Date(from = min(entry), to = enddate, by = 1)
 
 #This grabs the cohorts
 cohort = Workbook$`Cohort.Year.(year.1st.entered.9th)` 
+cohort[is.na(cohort)] = betterMax(cohort) #assume that students with no cohort have the most recent
 cohortSet = unique(cohort)
+
+tail(cohort)
 
 #Set up the data frame to hold the dates and the enrollment
 Enrollment = data.frame(dates)
@@ -56,7 +59,7 @@ GraphData = GraphData[GraphData$adjustedDate < as.Date("2001-06-20"),]   #ignore
 p5 = ggplot(GraphData, aes(x=adjustedDate, y=count, color=year)) + 
   geom_point(size = 1, alpha = .2)  +
   labs(y = "Number of Students", x = "Date", title = "Total Enrollment Over Each Year") + 
-  coord_cartesian(ylim = c(328, 365)) +
+  coord_cartesian(ylim = c(328, 380)) +
   scale_x_date(labels = date_format("%b"), date_breaks='1 month') +
   scale_colour_hue(l=50) + # Use a slightly darker palette than normal
   geom_smooth(method="loess",   # Add linear regression lines
@@ -68,7 +71,7 @@ p5 = ggplot(GraphData, aes(x=adjustedDate, y=count, color=year)) +
   theme(text = element_text(size=30)) 
 p5
 
-
+tail(Enrollment)
 
 #--------------------------------------------#
 #### Graph enrollment by cohort over time ####
@@ -102,7 +105,8 @@ p6 = ggplot(data = enrollment_long, aes(x = dates, y = value, colour = Cohort)) 
   geom_vline(xintercept = as.numeric(as.Date("2013-09-01"))) +
   geom_vline(xintercept = as.numeric(as.Date("2014-09-01"))) +
   geom_vline(xintercept = as.numeric(as.Date("2015-09-01"))) +
-  geom_vline(xintercept = as.numeric(as.Date("2016-09-01"))) + 
+  geom_vline(xintercept = as.numeric(as.Date("2016-09-01"))) +
+  geom_vline(xintercept = as.numeric(as.Date("2017-09-01"))) + 
   labs(x = "Time", y = "Cohort Enrollment", title = "Enrollment Over Time By Cohort") + 
   theme(text = element_text(size=30))
 p6
