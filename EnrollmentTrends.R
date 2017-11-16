@@ -5,6 +5,10 @@
 #### Clean the data ####
 #----------------------#
 
+# Remove those who never attended
+Workbook = Workbook[!(VbetterComp(Workbook$Discharge.Reason, "never attended")),]
+rownames(Workbook) = NULL
+
 #create the entry date variable
 entry = Workbook$Date.First.Enrolled.at.GTH
 which(is.na(entry)) # should be integer(0)
