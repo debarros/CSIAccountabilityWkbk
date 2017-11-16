@@ -152,7 +152,7 @@ CatBest = cbind(Alg, Geom, Trig, CompareMatrix[,5:10], ELA)            # make a 
 #-------------------------------#
 
 names(PowerSchool)[1] = "ID"                         # change the name of the ID variable to ID
-psMatrix = matrix(integer(0), n, nCat) # set up the matrix to hold the scores
+psMatrix = matrix(integer(0), n, nCat)               # set up the matrix to hold the scores
 rownames(psMatrix) = studentlist                     # in the matrix, name the rows according to the student ID
 colnames(psMatrix) = Categories                      # in the matrix, name the columns according to the exam name
 psCategoryNames  = c("Regents_Algebra_Score", "Regents_Geometry_Score", "Regents_Algebra2/Trigonometry_Score",
@@ -171,7 +171,7 @@ for (i in studentlist){       # for each student
 #-------------------------------------------------------#
 
 # set up the matrix with the best category scores
-CreateCompareMatrix(studentlist, Categories, psMatrix, CatBest)
+CatCompareMatrix = CreateCompareMatrix(studentlist, Categories, psMatrix, CatBest)
 
 # Create list of scores that are missing from PowerSchool
 # These are scores for which we have a record, but are not showing in PS
@@ -204,10 +204,7 @@ if(sum(!MbetterComp(CatCompareMatrix, psMatrix) & !is.na(CatCompareMatrix))){   
 } else {
   print("No scores to add to PowerSchool")
 } #end of if-else statement
-# Note: 
-#      Go through the ScoresMissingFromPowerSchool.csv file.
-#      Note that it doesn't catch everything.
-#      I'm not sure why it doesn't.  
+# Note: If needed, go through the ScoresMissingFromPowerSchool.csv file. 
 
 
 #------------------------------------------------------------------------------------#
@@ -259,7 +256,7 @@ if(exists("badWork") + exists("badPS") == 2){
   studentsToUse = NA
 } # /if-else-else-else
 
-if(!is.na(studentsToUse)){
+if(all(is.na(studentsToUse))){
   badStudents = RegentsDBraw[which(RegentsDBraw$StudentNumber %in% studentsToUse),]
   badStudents$First = Workbook$First.Name[match(badStudents$StudentNumber, Workbook$`Local.ID.(optional)`)]
   badStudents$Last = Workbook$Last.Name[match(badStudents$StudentNumber, Workbook$`Local.ID.(optional)`)]
