@@ -27,7 +27,7 @@ cohort = Workbook$`Cohort.Year.(year.1st.entered.9th)`
 cohort[is.na(cohort)] = betterMax(cohort) #assume that students with no cohort have the most recent
 cohortSet = unique(cohort)
 
-tail(cohort)
+tail(cohort) #should show the most recent cohort year
 
 #Set up the data frame to hold the dates and the enrollment
 Enrollment = data.frame(dates)
@@ -65,13 +65,11 @@ p5 = ggplot(GraphData, aes(x=adjustedDate, y=count, color=year)) +
   geom_smooth(method="loess",   # Add linear regression lines
               se=F,    # Don't add shaded confidence region
               fullrange=F,  # Extend regression lines?
-              span = .5, #adjust wiggliness
+              span = .4, #adjust wiggliness
               size = 2) +
   # geom_line() +
   theme(text = element_text(size=30)) 
 p5
-
-tail(Enrollment)
 
 #--------------------------------------------#
 #### Graph enrollment by cohort over time ####
@@ -129,7 +127,9 @@ enrollment_long$adjusted_dates = enrollment_long$dates - 365*(enrollment_long$co
 
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#FAA2F2", "#FF2E25", "#CC79A7")
 
-p7 = ggplot(data = enrollment_long, aes(x = adjusted_dates, y = value, colour = Cohort)) + 
+cohortsToShow = tail(cohortSet, 8)
+enrollment_long2 = enrollment_long[enrollment_long$cohort %in% cohortsToShow,]
+p7 = ggplot(data = enrollment_long2, aes(x = adjusted_dates, y = value, colour = Cohort)) + 
   geom_line(size = 2) +
   labs(y = "Number of Students", x = "Year of HS", title = "Enrollment Over High School Years By Cohort") + 
   scale_colour_manual(values=cbbPalette) +

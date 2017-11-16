@@ -11,7 +11,7 @@ source("functions.R")
 #Get the most up to date stuff from the actual workbook
 #Note: you must have access to the data drive on the school network
 Workbookraw.xlsx = read.xlsx(
-  xlsxFile = "J:/Accountability Spreadsheet/working copy/Green Tech Cohort Data Collection Workbook.xlsx",
+  xlsxFile = "\\\\stuthin2\\Data\\Accountability Spreadsheet\\working copy\\Green Tech Cohort Data Collection Workbook.xlsx",
   sheet = "All info in 1 sheet",startRow = 2)
 Workbook = Workbookraw.xlsx[!is.na(Workbookraw.xlsx$`Local.ID.(optional)`),-c(1,2,3)]
 
@@ -22,57 +22,24 @@ rownames(Workbook) = NULL
 
 #Format the date variables
 dateVars = c("Date.First.Enrolled.at.GTH", "Date.left.GTH", "Date.1st.Enrolled.in.9th.Grade.(anywhere)","Date.of.Confirmation")
+for(i in dateVars){  Workbook[,i] = as.Date(Workbook[,i], origin = "1899-12-30") }
 
-for(i in dateVars){
-  Workbook[,i] = as.Date(Workbook[,i], origin = "1899-12-30") 
-}
-
-
-# Below are variables that are important to get from the students table in powerschool
-# Note that the code currently assumes subsets of this data for the powerschool regents and powerschool students files
-# However, they should be rewritten to use the more general PowerSchoolAll.xlsx, which includes all the variables below.
-# 
-# student_number
-# lastfirst
-# grade_level
-# RCT_Reading_Score
-# RCT_Global_History_&_Geography_Score
-# Regents_Spanish_Score
-# Regents_Global_History_&_Geography_Score
-# Regents_Earth_Science_Score
-# Regents_French_Score
-# RCT_US_History_&_Government
-# RCT_Science_Score
-# RCT_Math_Score
-# RCT_Writing_Score
-# Regents_US_History_Score
-# Regents_Algebra_Score
-# Regents_Chemistry_Score
-# Regents_Geometry_Score
-# Regents_Living_Environment_Score
-# Regents_Algebra2/Trigonometry_Score
-# Regents_Comprehensive_English_Score
-# Regents_Physics_Score
-# Last_Name
-# First_name
-# DistrictEntryDate
-# Enroll_Status
-# EntryDate
-# Ethnicity
-# ExitCode
-# ExitDate
+# Read in student data from powerschool
+# Note: update the data in PowerSchoolAll.xlsx before loading it
+# There is a tab in the file that shows what fields to export
 powerschoolraw = read.xlsx(xlsxFile = "PowerSchoolAll.xlsx", sheet = 1)
 
 
 # Export all F2 grades from the storedgrades table in PowerSchool
-F2 = read.xlsx(xlsxFile = "F2grades.xlsx")
+# Note: The export will take a really long time
+F2 = read.xlsx(xlsxFile = "PowerSchoolAll.xlsx", sheet = "F2 Grades")
 F2 = F2[F2$`[1]Student_Number` != 0,]
 F2$DateStored = as.Date(F2$DateStored, origin = "1899-12-30")
 F2$StudentName = powerschoolraw$lastfirst[match(F2$`[1]Student_Number`, table = powerschoolraw$student_number)]
 
 
 # Sign in to google
-gs_auth() #this will launch a browser so you can sign into your account
+gs_auth() #this may launch a browser so you can sign into your account
 
 # Get the course-subject alignments
 CourseSubject = gs_url("https://docs.google.com/a/greentechhigh.org/spreadsheets/d/17QhVYZkjbx34M6wBvtHUYa_XrRUlRbOtuOsQ4P5l-nk/edit?usp=sharing")
@@ -95,3 +62,14 @@ RegentsDBraw = read.csv("RegentsDB.csv", stringsAsFactors = FALSE)
 
 # Load the current term's enrollment records (exported from the cc table in powerschool)
 cc.raw = read.xlsx(xlsxFile = "PowerSchoolAll.xlsx", sheet = "cc")
+
+
+# Load all the templates (data dictionaries) for the SIRS exports
+wblocation = "\\\\stuthin2/Data/SIRS manuals templates guides etc/2017-18eScholarTemplatesNYS_2017-09-25.xlsx"
+templates = loadWorkbook(wblocation)
+
+
+
+
+
+
