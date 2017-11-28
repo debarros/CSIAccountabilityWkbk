@@ -18,6 +18,15 @@ exit = Workbook$Date.left.GTH
 exit[is.na(exit)] = as.Date("6/30/2018", format = "%m/%d/%Y")
 betterMax(exit) #should be the end of the current year
 
+# Create some basic stuff to use
+EOY = as.Date(paste0(substr(as.character(Sys.Date()), 1, 4), "-06-30"))  # June 30th of the last school year that has ended
+BOY = as.Date(c("0001-01-01", "0002-01-01", "0003-01-01", "0004-01-01"))
+eDates = as.Date(c("0001-11-01", "0002-11-01", "0003-11-01", "0004-09-01"))
+ThisCohort = format(EOY,"%Y")
+RecentCohorts = paste0("c",c(ThisCohort, as.integer(ThisCohort)-1))
+MTHS = 3 # number of months at the beginning of the year
+MTHSdates = as.Date(paste0("000",1:4,"-",MTHS,"-01")) # dates marking MTHS months into each year
+
 #--------------------------------------------------------#
 #### Graph Total enrollment overlaying calendar years ####
 #--------------------------------------------------------#
@@ -28,7 +37,7 @@ dates = seq.Date(from = min(entry), to = enddate, by = 1)
 
 #This grabs the cohorts
 cohort = Workbook$`Cohort.Year.(year.1st.entered.9th)` 
-cohort[is.na(cohort)] = betterMax(cohort) #assume that students with no cohort have the most recent
+cohort[is.na(cohort)] = betterMax(cohort) # assume that students with no cohort have the most recent
 cohortSet = unique(cohort)
 
 tail(cohort) #should show the most recent cohort year
@@ -48,28 +57,31 @@ for (i in 1:nrow(Enrollment)){
 
 #In order to categorize by school year, create an offset date to move the school year start to the calendar year start
 Enrollment$offsetDate = Enrollment$dates - 181 
-Enrollment$year = format(Enrollment$offsetDate, "%Y")  #grab the year
-Enrollment$adjustedDate = as.Date(paste0(           #build a new date variable
-  format(Enrollment$offsetDate, "%m"),"/",          #grab the month
-  format(Enrollment$offsetDate, "%d"),"/","2000"),  #set all years to be 2000
-  format = "%m/%d/%Y") + 181                        #format it, and move it back to the correct day/month
+Enrollment$year = format(Enrollment$offsetDate, "%Y") # grab the year
+Enrollment$adjustedDate = as.Date(paste0(             # build a new date variable
+  format(Enrollment$offsetDate, "%m"),"/",            # grab the month
+  format(Enrollment$offsetDate, "%d"),"/","2000"),    # set all years to be 2000
+  format = "%m/%d/%Y") + 181                          # format it, and move it back to the correct day/month
 
 #Select the dates to be used for the graph
-GraphData = Enrollment[Enrollment$year > 2011,]     #ignore the first few years, when data was poor and the school not at capacity
-GraphData = GraphData[GraphData$adjustedDate > as.Date("2000-08-30"),]   #ignore the dates before August 30
-GraphData = GraphData[GraphData$adjustedDate < as.Date("2001-06-20"),]   #ignore the dates after June 20
+GraphData = Enrollment[Enrollment$year > 2011,]     # ignore the first few years, when data was poor and the school not at capacity
+GraphData = GraphData[GraphData$adjustedDate > as.Date("2000-08-30"),]   # ignore the dates before August 30
+GraphData = GraphData[GraphData$adjustedDate < as.Date("2001-06-20"),]   # ignore the dates after June 20
 
 #Make the graph - Daily Total Enrollment Over Each Academic Year
 p5 = ggplot(GraphData, aes(x=adjustedDate, y=count, color=year)) + 
   geom_point(size = 1, alpha = .2)  +
-  labs(y = "Number of Students", x = "Date", title = "Total Enrollment Over Each Year") + 
+  labs(y = "Number of Students", 
+       x = "Date", 
+       title = "Total Enrollment Over Each Year") + 
   coord_cartesian(ylim = c(328, 380)) +
-  scale_x_date(labels = date_format("%b"), date_breaks='1 month') +
-  scale_colour_hue(l=50) + # Use a slightly darker palette than normal
+  scale_x_date(labels = date_format("%b"), 
+               date_breaks='1 month') +
+  scale_colour_hue(l=50) +      # Use a slightly darker palette than normal
   geom_smooth(method="loess",   # Add linear regression lines
-              se=F,    # Don't add shaded confidence region
-              fullrange=F,  # Extend regression lines?
-              span = .4, #adjust wiggliness
+              se=F,             # Don't add shaded confidence region
+              fullrange=F,      # Extend regression lines?
+              span = .4,        # adjust wiggliness
               size = 2) +
   # geom_line() +
   theme(text = element_text(size=30)) 
@@ -97,20 +109,11 @@ for(i in cohortSet){
   enr_lng = enr_lng[!(enr_lng$Cohort == paste0("c",i) & enr_lng$dates > as.Date(paste0(i+4,"-06-20"))),]
 }
 
-
-p6 = ggplot(data = enr_lng, aes(x = dates, y = value, colour = Cohort)) + 
-  geom_line(size = 2) +
-  geom_vline(xintercept = as.numeric(as.Date("2009-09-01"))) +
-  geom_vline(xintercept = as.numeric(as.Date("2010-09-01"))) +
-  geom_vline(xintercept = as.numeric(as.Date("2011-09-01"))) +
-  geom_vline(xintercept = as.numeric(as.Date("2012-09-01"))) +
-  geom_vline(xintercept = as.numeric(as.Date("2013-09-01"))) +
-  geom_vline(xintercept = as.numeric(as.Date("2014-09-01"))) +
-  geom_vline(xintercept = as.numeric(as.Date("2015-09-01"))) +
-  geom_vline(xintercept = as.numeric(as.Date("2016-09-01"))) +
-  geom_vline(xintercept = as.numeric(as.Date("2017-09-01"))) + 
-  labs(x = "Time", y = "Cohort Enrollment", title = "Enrollment Over Time By Cohort") + 
-  theme(text = element_text(size=30))
+# Make the graph
+p6 = ggplot(data = enr_lng, aes(x = dates, y = value, colour = Cohort)) + geom_line(size = 2)
+for(i in 2009:ThisCohort.int){ p6 = p6 + geom_vline(xintercept = as.numeric(as.Date(paste0(i, "-09-01")))) }
+p6 = p6 + labs(x = "Time", y = "Cohort Enrollment", title = "Enrollment Over Time By Cohort")
+p6 = p6 + theme(text = element_text(size=30))
 p6
 
 
@@ -140,36 +143,69 @@ p7 = ggplot(data = enr_lng2, aes(x = adj_dates, y = value, colour = Cohort)) +
   theme(text = element_text(size=30))
 p7
 
-max(enr_lng$adj_dates)
-min(enr_lng$adj_dates)
+# Create indicators showing whether the cohort is in each current grade
+enr_lng2$current9  = (enr_lng2$cohort == ThisCohort.int - 0) + 1
+enr_lng2$current10 = (enr_lng2$cohort == ThisCohort.int - 1) + 1
+enr_lng2$current11 = (enr_lng2$cohort == ThisCohort.int - 2) + 1
+enr_lng2$current12 = (enr_lng2$cohort == ThisCohort.int - 3) + 1
+
+
+#--------------------------------------------------#
+#### Graph 1-year enrollment overlaying cohorts ####
+#--------------------------------------------------#
+
+p7.y1 = ggplot(data = enr_lng2, aes(x = adj_dates + 240, y = value, colour = Cohort, size = current9)) + 
+  geom_line() +
+  labs(y = "Number of Students", x = "Point in the Year", title = "Enrollment During 1st year of Cohort") + 
+  theme(text = element_text(size=30), legend.position = "none") +
+  scale_x_date(limits = c(as.Date("0001-09-01"), as.Date("0002-06-15")), date_breaks = "1 month", date_labels = "%b")
+p7.y1
+
+p7.y2 = ggplot(data = enr_lng2, aes(x = adj_dates + 240, y = value, colour = Cohort, size = current10)) + 
+  geom_line() +
+  labs(y = "Number of Students", x = "Point in the Year", title = "Enrollment During 2nd year of Cohort") + 
+  theme(text = element_text(size=30), legend.position = "none") +
+  scale_x_date(limits = c(as.Date("0002-09-01"), as.Date("0003-06-15")), date_breaks = "1 month", date_labels = "%b")
+p7.y2
+
+p7.y3 = ggplot(data = enr_lng2, aes(x = adj_dates + 240, y = value, colour = Cohort, size = current11)) + 
+  geom_line() +
+  labs(y = "Number of Students", x = "Point in the Year", title = "Enrollment During 3rd year of Cohort") + 
+  theme(text = element_text(size=30), legend.position = "none") +
+  scale_x_date(limits = c(as.Date("0003-09-01"), as.Date("0004-06-15")), date_breaks = "1 month", date_labels = "%b")
+p7.y3
+
+p7.y4 = ggplot(data = enr_lng2, aes(x = adj_dates + 240, y = value, colour = Cohort, size = current12)) + 
+  geom_line() +
+  labs(y = "Number of Students", x = "Point in the Year", title = "Enrollment During 4th year of Cohort") + 
+  theme(text = element_text(size=30), legend.position = "none") +
+  scale_x_date(limits = c(as.Date("0004-09-01"), as.Date("0005-06-15")), date_breaks = "1 month", date_labels = "%b")
+p7.y4
 
 
 #--------------------------------------------------#
 #### Estimate enrollment by grade for next year ####
 #--------------------------------------------------#
 
-EOY = as.Date(paste0(substr(as.character(Sys.Date()), 1, 4), "-06-30"))  #June 30th of the last school year that has ended
-ThisCohort = format(EOY,"%Y")
-RecentCohorts = paste0("c",c(ThisCohort, as.integer(ThisCohort)-1))
+BOY = as.Date(c())
 
 #Get the average enrollment over the course of the whole year for each grade level, merging across cohorts
 wholeYearByGrade = list()
-wholeYearByGrade$Fr = mean(enr_lng$value[enr_lng$adj_dates < as.Date("0001-11-01") & enr_lng$dates < EOY])
-wholeYearByGrade$FrRecent = mean(enr_lng$value[enr_lng$adj_dates < as.Date("0001-11-01") & enr_lng$dates < EOY & enr_lng$Cohort %in% RecentCohorts])
-wholeYearByGrade$So = mean(enr_lng$value[enr_lng$adj_dates > as.Date("0002-01-01") & enr_lng$adj_dates < as.Date("0002-11-01") & enr_lng$dates < EOY])
-wholeYearByGrade$Ju = mean(enr_lng$value[enr_lng$adj_dates > as.Date("0003-01-01") & enr_lng$adj_dates < as.Date("0003-11-01") & enr_lng$dates < EOY])
-wholeYearByGrade$Se = mean(enr_lng$value[enr_lng$adj_dates > as.Date("0004-01-01") & enr_lng$adj_dates < as.Date("0004-09-01") & enr_lng$dates < EOY])
+wholeYearByGrade$Fr = mean(enr_lng$value[enr_lng$adj_dates < eDates[1] & enr_lng$dates < EOY])
+wholeYearByGrade$FrRecent = mean(enr_lng$value[enr_lng$adj_dates < eDates[1] & enr_lng$dates < EOY & enr_lng$Cohort %in% RecentCohorts])
+wholeYearByGrade$So = mean(enr_lng$value[enr_lng$adj_dates > BOY[2] & enr_lng$adj_dates < eDates[2] & enr_lng$dates < EOY])
+wholeYearByGrade$Ju = mean(enr_lng$value[enr_lng$adj_dates > BOY[3] & enr_lng$adj_dates < eDates[3] & enr_lng$dates < EOY])
+wholeYearByGrade$Se = mean(enr_lng$value[enr_lng$adj_dates > BOY[4] & enr_lng$adj_dates < eDates[4] & enr_lng$dates < EOY])
 
 
 
 #Get the average enrollment over the first MTHS months of the year for each grade level, merging across cohorts
-MTHS = 3 #number of months at the beginning of the year
 earlyByGrade = list()
-earlyByGrade$Fr = mean(enr_lng$value[enr_lng$adj_dates < as.Date(paste0("0001-",MTHS,"-01")) & enr_lng$dates < EOY])
-earlyByGrade$FrRecent = mean(enr_lng$value[enr_lng$adj_dates < as.Date(paste0("0001-",MTHS,"-01")) & enr_lng$dates < EOY & enr_lng$Cohort %in% RecentCohorts])
-earlyByGrade$So = mean(enr_lng$value[enr_lng$adj_dates > as.Date("0002-01-01") & enr_lng$adj_dates < as.Date(paste0("0002-",MTHS,"-01")) & enr_lng$dates < EOY])
-earlyByGrade$Ju = mean(enr_lng$value[enr_lng$adj_dates > as.Date("0003-01-01") & enr_lng$adj_dates < as.Date(paste0("0003-",MTHS,"-01")) & enr_lng$dates < EOY])
-earlyByGrade$Se = mean(enr_lng$value[enr_lng$adj_dates > as.Date("0004-01-01") & enr_lng$adj_dates < as.Date(paste0("0004-",MTHS,"-01")) & enr_lng$dates < EOY])
+earlyByGrade$Fr = mean(enr_lng$value[enr_lng$adj_dates < MTHSdates[1] & enr_lng$dates < EOY])
+earlyByGrade$FrRecent = mean(enr_lng$value[enr_lng$adj_dates < MTHSdates[1] & enr_lng$dates < EOY & enr_lng$Cohort %in% RecentCohorts])
+earlyByGrade$So = mean(enr_lng$value[enr_lng$adj_dates > BOY[2] & enr_lng$adj_dates < MTHSdates[2] & enr_lng$dates < EOY])
+earlyByGrade$Ju = mean(enr_lng$value[enr_lng$adj_dates > BOY[3] & enr_lng$adj_dates < MTHSdates[3] & enr_lng$dates < EOY])
+earlyByGrade$Se = mean(enr_lng$value[enr_lng$adj_dates > BOY[4] & enr_lng$adj_dates < MTHSdates[4] & enr_lng$dates < EOY])
 
 #Calculate how many students tend to leave between MTHS months into the year and the beginning of the following year
 earlyByGrade$FrLoss = earlyByGrade$Fr - wholeYearByGrade$So
@@ -179,10 +215,10 @@ earlyByGrade$JuLoss = earlyByGrade$Ju - wholeYearByGrade$Se
 #Calculate the average enrollment for each cohort in the current school year up to the current point in the year
 nowByGrade = list()
 ThisCohort.int = as.integer(ThisCohort)
-nowByGrade$Fr = mean(enr_lng$value[enr_lng$adj_dates < as.Date("0001-11-01") & enr_lng$cohort == ThisCohort.int])
-nowByGrade$So = mean(enr_lng$value[enr_lng$adj_dates > as.Date("0002-01-01") & enr_lng$adj_dates < as.Date("0002-11-01") & enr_lng$cohort == ThisCohort.int - 1])
-nowByGrade$Ju = mean(enr_lng$value[enr_lng$adj_dates > as.Date("0003-01-01") & enr_lng$adj_dates < as.Date("0003-11-01") & enr_lng$cohort == ThisCohort.int - 2])
-nowByGrade$Se = mean(enr_lng$value[enr_lng$adj_dates > as.Date("0004-01-01") & enr_lng$adj_dates < as.Date("0004-09-01") & enr_lng$cohort == ThisCohort.int - 3])
+nowByGrade$Fr = mean(enr_lng$value[enr_lng$adj_dates < eDates[1] & enr_lng$cohort == ThisCohort.int])
+nowByGrade$So = mean(enr_lng$value[enr_lng$adj_dates > BOY[2] & enr_lng$adj_dates < eDates[2] & enr_lng$cohort == ThisCohort.int - 1])
+nowByGrade$Ju = mean(enr_lng$value[enr_lng$adj_dates > BOY[3] & enr_lng$adj_dates < eDates[3] & enr_lng$cohort == ThisCohort.int - 2])
+nowByGrade$Se = mean(enr_lng$value[enr_lng$adj_dates > BOY[4] & enr_lng$adj_dates < eDates[4] & enr_lng$cohort == ThisCohort.int - 3])
 
 #Calculate simple predictions for next year's average enrollment over the course of the entire year for each cohort
 simpleByGrade = list()
@@ -270,7 +306,7 @@ for(i in 0:length(simpleByGrade)){
     print("Simple Predictions")
   } else {
     print(paste0(names(simpleByGrade)[i]," - ",round(simpleByGrade[[i]], digits = 0)))    
-    }
+  }
 }
 
 
@@ -278,7 +314,7 @@ for(i in 0:length(wholeYearPred)){
   if(i == 0) {
     print("Predictions for Yearlong Average Enrollment")
   } else {
-  print(paste0(names(wholeYearPred)[i]," - ",round(wholeYearPred[[i]], digits = 0)))
+    print(paste0(names(wholeYearPred)[i]," - ",round(wholeYearPred[[i]], digits = 0)))
   }
 }
 
@@ -286,7 +322,7 @@ for(i in 0:length(FallPred)){
   if(i == 0) {
     print("Predictions for Fall Enrollment")
   } else {
-  print(paste0(names(FallPred)[i]," - ",round(FallPred[[i]], digits = 0)))
+    print(paste0(names(FallPred)[i]," - ",round(FallPred[[i]], digits = 0)))
   }
 }
 
@@ -296,14 +332,12 @@ for(i in 0:length(FallPred)){
 #### Historical enrollment averages by cohort by year ####
 #--------------------------------------------------------#
 
-ThisCohort.int
-
 for(i in 5:0){
-  print(paste0("school year ", ThisCohort.int - i))
-  print(mean(enr_lng$value[enr_lng$adj_dates < as.Date("0001-11-01") & enr_lng$cohort == ThisCohort.int - i]))
-  print(mean(enr_lng$value[enr_lng$adj_dates > as.Date("0002-01-01") & enr_lng$adj_dates < as.Date("0002-11-01") & enr_lng$cohort == ThisCohort.int - i - 1]))
-  print(mean(enr_lng$value[enr_lng$adj_dates > as.Date("0003-01-01") & enr_lng$adj_dates < as.Date("0003-11-01") & enr_lng$cohort == ThisCohort.int - i - 2]))
-  print(mean(enr_lng$value[enr_lng$adj_dates > as.Date("0004-01-01") & enr_lng$adj_dates < as.Date("0004-09-01") & enr_lng$cohort == ThisCohort.int - i - 3]))
+  tcadj = ThisCohort.int - i             # This Cohort, adjusted
+  print(paste0("school year ", tcadj))
+  for(j in 1:4){
+    print(mean(enr_lng$value[enr_lng$cohort == tcadj - j + 1 & enr_lng$adj_dates < eDates[j] & enr_lng$adj_dates > BOY[j]]))
+  }
 }
 
 
@@ -314,14 +348,29 @@ for(i in 5:0){
 #----------------------------------------------#
 
 # How many students left between the end of one year and MTHS months into the next?
+datestouse1 = as.Date(paste0("000",1:3,"-10-15"))       # This corresponds to June 15
+datestouse2 = MTHSdates[2:4]
+CohortsToUse = unique(enr_lng$cohort)
+Drops = c("FrSo", "SoJu", "JuSe")     # This indicates the split from the end of one year to MTHS into the next
+dropMatrix = matrix(data = NA, nrow = length(CohortsToUse), ncol = length(Drops))
+rownames(dropMatrix) = CohortsToUse
+colnames(dropMatrix) = Drops
 
-datestouse = as.Date(paste0("000",1:4,"-",MTHS,"-01"))
+for(i in 1:length(CohortsToUse)){
+  print(paste0("i=",i))
+  currentCohort = CohortsToUse[i]
+  for(j in 1:length(Drops)){
+    print(paste0("j=",j))
+    currentDrop = Drops[j]
+    startValue = enr_lng$value[enr_lng$cohort == currentCohort & enr_lng$adj_dates == datestouse1[j]]
+    endValue   = enr_lng$value[enr_lng$cohort == currentCohort & enr_lng$adj_dates == datestouse2[j]]
+    if(length(c(startValue, endValue)) > 1){
+      dropMatrix[i,j] = startValue - endValue  
+    }
+  }
+}
 
-
-enr_lng[enr_lng$adj_dates %in% datestouse,]
-
-enr_lng$value[enr_lng$adj_dates == as.Date(paste0("0001-",MTHS,"-01"))]
-
+colMeans(dropMatrix, na.rm = T)
 
 
 
