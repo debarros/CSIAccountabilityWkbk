@@ -1,6 +1,8 @@
 #Students.R
 
 # This is for looking at problems with the cohorts, such as students missing transfer info
+# For more information, see the file in the online operations manual at 
+# Instructions > Data Reporting > CSI > Accountability Workbook > Identifying Graduation Cohort Issues
 
 # Note: First run MainScript.R
 
@@ -10,8 +12,7 @@
 
 #This script finds discrepancies between PowerSchool and the Accountability Workbook in terms of which students are current
 
-#Export a ton of info from the Students table in PS
-# psStudentsRaw = read.csv("PowerSchoolStudents.csv")
+powerschool = powerschoolraw
 psStudentsRaw = powerschool
 
 #Get a list of the students in PS 
@@ -73,5 +74,9 @@ write.csv(Workbook.Problems, file = "workbookproblems.csv")
 
 offtrack = Workbook.InCohort[Workbook.InCohort$`Grade.(leave.blank.if.no.longer.enrolled)` %in% c(9:12) & toupper(Workbook.InCohort$`Still.Enrolled?`) == "YES",]
 offtrack = offtrack[,c("Local.ID.(optional)", "Last.Name", "First.Name", "Cohort.Year.(year.1st.entered.9th)", "Grade.(leave.blank.if.no.longer.enrolled)")]
-offtrack$off = (offtrack$`Cohort.Year.(year.1st.entered.9th)` + offtrack$`Grade.(leave.blank.if.no.longer.enrolled)`) != 2025 # adjust this number
+offtrack$off = (offtrack$`Cohort.Year.(year.1st.entered.9th)` + offtrack$`Grade.(leave.blank.if.no.longer.enrolled)`) != schoolYear() + 9
 write.csv(offtrack[offtrack$off,], file = "offtrack.csv")
+
+
+
+
