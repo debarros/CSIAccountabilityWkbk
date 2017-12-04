@@ -15,7 +15,7 @@ which(is.na(entry)) # should be integer(0)
 
 #Create the exit date variable, and set students who haven't left to exit at the end of the year
 exit = Workbook$Date.left.GTH
-exit[is.na(exit)] = as.Date("6/30/2018", format = "%m/%d/%Y")
+exit[is.na(exit)] = schoolYear("end")
 betterMax(exit) #should be the end of the current year
 
 # Create some basic stuff to use
