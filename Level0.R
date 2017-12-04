@@ -12,7 +12,6 @@ demographics = read.csv(file.choose() ,header = F, stringsAsFactors = F)
 x = dBtools::GetNiceColumnNames("STUDENT LITE", templates)
 colnames(demographics) = x[1:ncol(demographics)]
 
-
 # reformat the demographics file
 demographics[which(is.na(demographics), arr.ind = T)] = ""                                # make blank spaces blank (not NA)
 demographics[,8] = as.character(demographics[,8])                                         # make Grade Level character to preserve 0's
@@ -26,6 +25,7 @@ if(any(demographics$ETHNICCODESHORTRACE1CODE == "")){                           
 }
 
 demographics$ETHNICCODESHORTRACE1CODE[demographics$ETHNICCODESHORTRACE1CODE == ""] = "B"  # change missing race to Black
+demographics$GUIDANCECOUNSELORDISTRICTCODE = ""                                           # remove the guidance counselor codes
 write.table(demographics, "demographics.csv", row.names = F,                              # output 
             col.names = F, sep = ",", dec = ".") 
 
@@ -79,8 +79,8 @@ write.table(pfacts, file = "pfacts.csv", row.names = F, col.names = F, sep = ","
 #### Diploma types ####
 #---------------------#
 
-demographics$DiplomaTypeCode
-unique(demographics$DiplomaTypeCode)
+demographics$DIPLOMATYPECODECREDENTIALTYPECODE
+unique(demographics$DIPLOMATYPECODECREDENTIALTYPECODE)
 
 demographics[which(demographics$DiplomaTypeCode == 762),]
 
