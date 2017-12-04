@@ -23,3 +23,6 @@ PSLocation = "PowerSchoolAll.xlsx"
 
 # Location of the Regents Database export file
 RDBLocation = "RegentsDB.csv"
+
+# Location of direct cert files from NYSSIS
+LunchLocation = "\\\\stuthin2/data/2017-2018\\lunch"
