@@ -6,6 +6,11 @@
 #   A recent Demographics extract from Power school
 #   A recent Enrollment extract from Power school
 
+# For certain parts, you may also need the following:
+#   The spreadsheet of lunch forms from the main office
+#   An export of unmatched students from the powerschool student table
+#   A download of the results of the bulk matching process from the NYSSIS website
+
 
 #-----------------#
 #### Load Data ####
@@ -17,6 +22,8 @@
 
 # Load all of them from this year and then combine them into one data.frame
 NyssisFile = read.xlsx.multi(folder = LunchLocation, pattern = "nyssis_lunch", dupVar = "Local.ID", orderBy = "Certification.Method")
+NyssisSnap = NyssisFile[NyssisFile$Certification.Method == "SNAP",]
+NyssisMedicaid = NyssisFile[NyssisFile$Certification.Method == "MEDICAID",]
 
 # generate the enrollment, student lite, and program service extracts from PowerSchool and load them here
 EnrollmentExtract = read.csv(file = file.choose(), header = F, stringsAsFactors = F)
@@ -39,10 +46,23 @@ freeLunch = lunch[lunch$PROGRAMSCODEPROGRAMSERVICECODE == 5817,]
 allMatches = NyssisFile[NyssisFile$Local.ID %in% StudentLiteExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID,
                         c("Local.ID", "P12.First.Name","P12.Last.Name", "Certification.Method","Case.Numbers")]
 
+# Load and manipulate the lunch form spreadsheet (if it exists)
+statusTypes = data.frame(
+  Status = c("F", "R", "D", "Free", "Reduced", "Denied", "Paid"), 
+  Code = c("F", "R", "D", "F", "R", "D", "D"), 
+  stringsAsFactors = F)
+forms = read.xlsx(xlsxFile = file.choose()) # read in the Lunch Applications file from Ms Hood
+forms = forms[!is.na(forms$Lunch.Form),]    # leave out the ones with no lunch form
+forms = forms[!is.na(forms$Status),]        # leave out the ones with no lunch status
+forms$Status = statusTypes$Code[match(forms$Status, statusTypes$Status)]
+forms = forms[!is.na(forms$Status),]        # leave out the ones with no lunch status
+forms = forms[forms$Status != "D",]         # leave out the ones who are Denied (paid lunch)
+
 
 #-----------------------------------------------------#
 #### Bulk Upload 1 - determining students to check ####
 #-----------------------------------------------------#
+
 # Only run this section if you plan to make a bulk upload to submit to the NYSSIS site
 # This should only be done once per year
 
@@ -61,7 +81,8 @@ write(x = paste0(StudentsToCheck, collapse = ","), file = "studentsToCheck.txt")
 
 # Only do this next part if you have already done Bulk Upload 1
 # NOTE: THIS FUNCTION HAS NOT BEEN TESTED
-CNMS.MakeBulkUpload(xlsxFile = "studentsToCheck (2017-10-05).xlsx", singleGender = "M")
+# The file should be called something like "studentsToCheck (2017-10-05).xlsx"
+CNMS.MakeBulkUpload(xlsxFile = file.choose(), singleGender = "M")
 # Upload the file bulkupload.txt to the NYSSIS web interface
 
 
@@ -137,21 +158,10 @@ if(sum(freeAddDCMP) > 0){
 #### PowerSchool Upload based on Lunch Forms ####
 #-----------------------------------------------#
 
-statusTypes = data.frame(
-  Status = c("F", "R", "D", "Free", "Reduced", "Denied", "Paid"), 
-  Code = c("F", "R", "D", "F", "R", "D", "D"), 
-  stringsAsFactors = F)
-
-forms = read.xlsx(xlsxFile = file.choose()) # read in the Lunch Applications file from Ms Hood
-forms = forms[!is.na(forms$Lunch.Form),]    # leave out the ones with no lunch form
-forms = forms[!is.na(forms$Status),]        # leave out the ones with no lunch status
-forms$Status = statusTypes$Code[match(forms$Status, statusTypes$Status)]
-forms = forms[!is.na(forms$Status),]        # leave out the ones with no lunch status
-forms = forms[forms$Status != "D",]         # leave out the ones who are Denied (paid lunch)
-forms = forms[!(forms$Student.Number %in% allMatches$Local.ID),] # leave out the ones who are already in allMatches
-forms = forms[!(forms$Student.Number %in% lunch$STUDENTIDSCHOOLDISTRICTSTUDENTID),] # leave out the ones who are already in PowerSchool
-if(nrow(forms) > 0){
-  write.csv(x = forms, file = "newFormMatches.csv")
+forms.new = forms[!(forms$Student.Number %in% allMatches$Local.ID),] # leave out the ones who are already in allMatches
+forms.new = forms.new[!(forms.new$Student.Number %in% lunch$STUDENTIDSCHOOLDISTRICTSTUDENTID),] # leave out the ones who are already in PowerSchool
+if(nrow(forms.new) > 0){
+  write.csv(x = forms.new, file = "newFormMatches.csv")
   print("There are new matches to upload")
   print("see the file newFormMatches.csv")
   print("Use the program service upload template to import these into PowerSchool.")
@@ -277,3 +287,54 @@ write.csv(wkbkLunch, "Workbook Lunch Status.csv")
 
 # Go paste the workbook lunch status into the workbook, one tab at a time
 
+
+#----------------------------#
+#### Cafeteria Info Sheet ####
+#----------------------------#
+
+# This is for creating a list for the cafeteria staff to include in a binder
+# This requires that the Nyssis info, powerschool info, and lunch form spreadsheet be up to date
+CafeList = StudentLiteExtract[,c("STUDENTIDSCHOOLDISTRICTSTUDENTID", "LASTNAMESHORTSTUDENTSLASTNAME", "FIRSTNAMESHORTSTUDENTSFIRSTNAME", 
+                                 "CURRENTGRADELEVELGRADELEVEL", "BIRTHDATEDATEOFBIRTH", "GENDERCODEGENDERDESCRIPTION")]
+CafeList$Status = "Paid"
+for(i in 1:nrow(CafeList)){
+  currID = CafeList$STUDENTIDSCHOOLDISTRICTSTUDENTID[i]
+  if(currID %in% reducedLunch$STUDENTIDSCHOOLDISTRICTSTUDENTID){  
+    wkbkLunch$Lunch.Status[i] = "Reduced"
+  } else if (currID %in% freeLunch$STUDENTIDSCHOOLDISTRICTSTUDENTID){ 
+    wkbkLunch$Lunch.Status[i] = "Free"
+  }
+}
+
+CafeList$Medicaid = F
+CafeList$SNAP = F
+CafeList$Form = F
+CafeList$MedicaidCaseNo = ""
+CafeList$SnapCaseNo = ""
+for(i in 1:nrow(CafeList)){
+  print(i)
+  currID = CafeList$STUDENTIDSCHOOLDISTRICTSTUDENTID[i]
+  if(currID %in% NyssisMedicaid$Local.ID){
+    CafeList$Medicaid[i] = T
+    casenumbers = NyssisMedicaid$Case.Numbers[NyssisMedicaid$Local.ID == currID]
+    if(length(casenumbers) > 1){
+      stop("Multiple medicaid case numbers")
+    }
+    CafeList$MedicaidCaseNo[i] = casenumbers
+  }
+  if(currID %in% NyssisSnap$Local.ID){
+    CafeList$SNAP[i] = T
+    casenumbers = NyssisSnap$Case.Numbers[NyssisSnap$Local.ID == currID]
+    if(length(casenumbers) > 1){
+      stop("Multiple snap case numbers")
+    }
+    CafeList$SnapCaseNo[i] = casenumbers
+  }
+  if(currID %in% forms$Student.Number){
+    CafeList$Form = T
+  }
+}
+
+colnames(CafeList) = c("STUDENT.ID", "LAST.NAME", "FIRST.NAME", "GRADE.LEVEL", "DOB", "GENDER", 
+                       "Lunch.Status", "Medicaid", "SNAP", "Form", "MedicaidCaseNo", "SnapCaseNo")
+write.csv(CafeList, "list for cafeteria.csv")
