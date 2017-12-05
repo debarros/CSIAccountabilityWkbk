@@ -28,12 +28,16 @@ colnames(progserv) = GetNiceColumnNames("PROGRAMS FACT", templates)
 colnames(StudentLiteExtract) = GetNiceColumnNames("STUDENT LITE", templates)[1:ncol(StudentLiteExtract)]
 colnames(EnrollmentExtract) = GetNiceColumnNames("SCHOOL ENTRY EXIT", templates)
 
-# get just the lunch services
-lunch = progserv[progserv$PROGRAMSCODEPROGRAMSERVICECODE %in% c(5806, 5817),] 
+# Get just the lunch services
+lunch = progserv[progserv$PROGRAMSCODEPROGRAMSERVICECODE %in% c(5806, 5817),]
+# Students who currently are set as Reduced Price lunch in powerschool
+reducedLunch = lunch[lunch$PROGRAMSCODEPROGRAMSERVICECODE == 5806,]            
+# Students who currently are set as Free lunch in powerschool
+freeLunch = lunch[lunch$PROGRAMSCODEPROGRAMSERVICECODE == 5817,]               
 
 # Get the Nyssis Matches
 allMatches = NyssisFile[NyssisFile$Local.ID %in% StudentLiteExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID,
-                           c("Local.ID", "P12.First.Name","P12.Last.Name", "Certification.Method","Case.Numbers")]
+                        c("Local.ID", "P12.First.Name","P12.Last.Name", "Certification.Method","Case.Numbers")]
 
 
 #-----------------------------------------------------#
@@ -88,9 +92,9 @@ write.csv(x = StudentLiteExtract[unmatchedIDs, 4:8], file = "unmatchedStudents.c
 # The students in unmatchedStudents.csv need to submit lunch forms
 
 
-#--------------------------#
-#### PowerSchool Upload ####
-#--------------------------#
+#----------------------------------------------------#
+#### PowerSchool Upload and Changes based on DCMP ####
+#----------------------------------------------------#
 
 # Get set of students for new upload
 newmatches = allMatches[!(allMatches$Local.ID %in% lunch$STUDENTIDSCHOOLDISTRICTSTUDENTID),]
@@ -101,32 +105,32 @@ if(nrow(newmatches) > 0){
   write.csv(x = newmatches, file = "newmatches.csv")
 } else {
   print("There are no new matches to upload to PowerSchool")
-}
+} # /if-else
 
-# Students who currently are set as Reduced Price lunch
-reducedLunch = lunch[lunch$PROGRAMSCODEPROGRAMSERVICECODE == 5806,]
+
+# Students who are set as reduced price lunch, but should be set as free lunch
 reducedToSwitch = allMatches$Local.ID %in% reducedLunch$STUDENTIDSCHOOLDISTRICTSTUDENTID
 if(sum(reducedToSwitch) > 0){
   print("The following students are set as Reduced Price lunch, but need to be changed to Free Lunch.")
   print(allMatches[reducedToSwitch,])
 } else {
   print("There are no students who need to be changed from Reduced Price Lunch to Free Lunch in PowerSchool")
-}
+} # /if-else
+
 
 # Students who currently have free lunch, but not the DCMP eligibility code
-freeLunch = lunch[lunch$PROGRAMSCODEPROGRAMSERVICECODE == 5817,]
-freeLunch$DCMP = FALSE
-for(i in 1:nrow(freeLunch)){
+freeLunch$DCMP = FALSE        # Initialize the DCMP variable
+for(i in 1:nrow(freeLunch)){  # Determine which students have the DCMP code
   freeLunch$DCMP[i] = any(freeLunch[i,paste0("PROGRAMELIGIBILITYCODE",1:6)] == "DCMP")
-}
-freeAddDCMP = freeLunch[!freeLunch$DCMP,]
-freeAddDCMP = allMatches$Local.ID %in% freeAddDCMP$STUDENTIDSCHOOLDISTRICTSTUDENTID
+} # /for
+freeAddDCMP = freeLunch[!freeLunch$DCMP,] # Subset to just those who don't have the DCMP code
+freeAddDCMP = allMatches$Local.ID %in% freeAddDCMP$STUDENTIDSCHOOLDISTRICTSTUDENTID  # Find students with free lunch in powerschool who need the DCMP code
 if(sum(freeAddDCMP) > 0){
   print("The following students are set as Free lunch, but need to have DCMP added to their program eligibility codes.")
   print(allMatches[freeAddDCMP,])
 } else {
   print("There are no Free Lunch students in PowerSchool that need to have DCMP added to their program eligibility codes.")
-}
+} # /if-else
 
 
 #-----------------------------------------------#
@@ -154,9 +158,7 @@ if(nrow(forms) > 0){
   print("For the eligibility code, use 'Application'.")
 } else {
   print("No new matches from the forms")
-}
-
-
+} # /if-else
 
 
 #-----------------------------#
@@ -171,27 +173,29 @@ EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE[EnrollmentExtract$SCHOOLEXITD
 BEDSday = BedsDate()
 
 for(i in 1:nrow(StudentLiteExtract)){
-  enrollments = EnrollmentExtract[EnrollmentExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID == StudentLiteExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID[i],]
+  enrollRows = EnrollmentExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID == StudentLiteExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID[i]
+  enrollments = EnrollmentExtract[enrollRows,]
   for(j in 1:nrow(enrollments)){
     enrollments$Before[j] = enrollments$SCHOOLENTRYDATEENROLLMENTENTRYDATE[j] <= BEDSday
     enrollments$After[j]  = enrollments$SCHOOLEXITDATEENROLLMENTEXITDATE[j] >= BEDSday
     enrollments$Both[j] = enrollments$Before[j] & enrollments$After[j]
-  }
+  } # /for each of that student's enrollment records
   StudentLiteExtract$EnrolledByBEDSDay[i] = any(enrollments$Before)
   StudentLiteExtract$EnrolledOnBEDSDay[i] = any(enrollments$Both)
-}
+} # /for each student
 StudentLiteExtract$Lunch = factor(
   lunch$PROGRAMSCODEPROGRAMSERVICECODE[match(
     StudentLiteExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID, 
     lunch$STUDENTIDSCHOOLDISTRICTSTUDENTID)])
 summary(StudentLiteExtract$Lunch)
 
+# Use the following line to determine which students to use
+# Subset it by EnrolledOnBEDSDay or EnrolledByBEDSDay, if desired.
+# Otherwise, don't subset it at all and just use the whole StudentLiteExtract
 usableStudents = StudentLiteExtract[StudentLiteExtract$EnrolledOnBEDSDay,]
 
 LunchByDistrict = table(usableStudents[,c("Lunch", "DISTRICTCODEOFRESIDENCE")], useNA = "always")
-
 DistrictCodes = dimnames(LunchByDistrict)$DISTRICTCODEOFRESIDENCE
-
 DORlookup = as.data.frame(matrix(c(
   "NY010100", 	"Albany",
   "NY270100", 	"Amsterdam",
@@ -219,11 +223,31 @@ DORlookup = as.data.frame(matrix(c(
   "NY011200", 	"Watervliet",
   "NY490804",	  "Wynantskill"
 ), ncol = 2, byrow = T), stringsAsFactors = F)
-
 DistrictNames = DORlookup$V2[match(DistrictCodes, DORlookup$V1)]
-
 dimnames(LunchByDistrict)$DISTRICTCODEOFRESIDENCE = DistrictNames
 write.csv(LunchByDistrict, "lunchByDistrict.csv")
+
+
+#---------------------#
+#### BEDS Day FRPL ####
+#---------------------#
+
+# This is useful for completing the IMF
+# It requires that all FRPL records (from both DCMP and lunch forms) be entered in PowerSchool already.
+x = EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE == ""               # which exist dates are missing?
+EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE[x] = schoolYear("end")  # set missing exit dates to the end of the year
+# convert exit date to date type
+EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE = as.Date(EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE)
+# convert entry date to date type
+EnrollmentExtract$SCHOOLENTRYDATEENROLLMENTENTRYDATE = as.Date(EnrollmentExtract$SCHOOLENTRYDATEENROLLMENTENTRYDATE) 
+
+y = EnrollmentExtract$SCHOOLENTRYDATEENROLLMENTENTRYDATE < BedsDate()   # which students were around before BEDS day?
+y = y & EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE > BedsDate() # which students were around after BEDS day?
+BEDSstudents = EnrollmentExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID[y]    # Get a vector of ID's of students enrolled on BEDS day
+
+# subset lunch services to just students who were enrolled on BEDS day
+bedsLunchServices = lunch[lunch$STUDENTIDSCHOOLDISTRICTSTUDENTID %in% BEDSstudents,] 
+summary(factor(bedsLunchServices$PROGRAMSCODEPROGRAMSERVICECODE))                    # Summarize the results
 
 
 #------------------------------------------#
@@ -242,7 +266,7 @@ for(i in 1:nrow(wkbkLunch)){
   currID = wkbkLunch$`Local.ID.(optional)`[i]
   if(currID %in% reducedLunch$STUDENTIDSCHOOLDISTRICTSTUDENTID){  
     wkbkLunch$Lunch.Status[i] = "R"
-  } else if (currID %in% reducedLunch$STUDENTIDSCHOOLDISTRICTSTUDENTID){ 
+  } else if (currID %in% freeLunch$STUDENTIDSCHOOLDISTRICTSTUDENTID){ 
     wkbkLunch$Lunch.Status[i] = "F"
   } else if (currID %in% StudentLiteExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID){ 
     wkbkLunch$Lunch.Status[i] = "P"
