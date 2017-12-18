@@ -13,23 +13,25 @@ x = dBtools::GetNiceColumnNames("STUDENT LITE", templates)
 colnames(demographics) = x[1:ncol(demographics)]
 
 # reformat the demographics file
-demographics[which(is.na(demographics), arr.ind = T)] = ""                                # make blank spaces blank (not NA)
-demographics[,8] = as.character(demographics[,8])                                         # make Grade Level character to preserve 0's
-demographics[nchar(demographics[,8]) == 1,8] = "09"                                       # change single-digit grade levels to "09"
-demographics[demographics[,24] == "68",24] = "068"                                        # change diploma type code 68 to 068
+demographics = DFna.to.empty(demographics)              # make blank spaces blank (not NA)
+gradelevels = demographics$CURRENTGRADELEVELGRADELEVEL  # grab grade levels
+gradelevels = as.character(gradelevels)                 # make Grade Level character to preserve 0's
+gradelevels[nchar(gradelevels) == 1] = "09"             # change single-digit grade levels to "09"
+demographics$CURRENTGRADELEVELGRADELEVEL = gradelevels  # put grade levels back in
+demographics[demographics[,24] == "68",24] = "068"      # change diploma type code 68 to 068
 
-if(any(demographics$ETHNICCODESHORTRACE1CODE == "")){                                     # Check for students missing race/ethnicity
-  write.csv(demographics[demographics$ETHNICCODESHORTRACE1CODE == "",4:8], 
+races = demographics$ETHNICCODESHORTRACE1CODE           # grab races
+if(any(races == "")){                                   # Check for students missing race/ethnicity
+  write.csv(demographics[races == "",4:8], 
             "missing student race and ethnicity.csv")
   print("There are students missing race and ethnicity.  Check the csv file.")
-}
+} # /if there are blank races
+races[races == ""] = "B"                        # change missing race to Black
+demographics$ETHNICCODESHORTRACE1CODE = races   # put races back in
 
-demographics$ETHNICCODESHORTRACE1CODE[demographics$ETHNICCODESHORTRACE1CODE == ""] = "B"  # change missing race to Black
-demographics$GUIDANCECOUNSELORDISTRICTCODE = ""                                           # remove the guidance counselor codes
-write.table(demographics, "demographics.csv", row.names = F,                              # output 
-            col.names = F, sep = ",", dec = ".") 
+demographics$GUIDANCECOUNSELORDISTRICTCODE = "" # remove the guidance counselor codes
 
-
+write.SIRS(demographics, "demographics.csv")    # output
 
 
 
@@ -44,35 +46,28 @@ write.table(demographics, "demographics.csv", row.names = F,                    
 
 #All this does is fix lunch status eligibility codes from "NSLP APPLICATION" to "APPLICATION"
 
-pfacts = read.csv(file.choose(), stringsAsFactors = F, header = F)
-x = GetNiceColumnNames("PROGRAMS FACT", templates)
-colnames(pfacts) = x
-for(i in 1:nrow(pfacts)){
-  if(nchar(pfacts$PROGRAMSCODEPROGRAMSERVICECODE[i]) < 4){
-    pfacts$PROGRAMSCODEPROGRAMSERVICECODE[i] = paste0("0", pfacts$PROGRAMSCODEPROGRAMSERVICECODE[i])
+pfacts = read.csv(file.choose(), stringsAsFactors = F, header = F) # load the program facts export
+colnames(pfacts) = GetNiceColumnNames("PROGRAMS FACT", templates)  # set the column names
+toFix = nchar(pfacts$PROGRAMSCODEPROGRAMSERVICECODE) < 4           # find the codes that were truncated
+Fixed = paste0("0", pfacts$PROGRAMSCODEPROGRAMSERVICECODE[toFix])  # make fixed versions of truncated codes
+pfacts$PROGRAMSCODEPROGRAMSERVICECODE[toFix] = Fixed               # put fixed codes back in the data.frame
+pfacts = DFna.to.empty(pfacts)                                     # replace NA's with blanks
+
+if(any(pfacts == "NSLP APPLICATION")){
+  print("Some students still have NSLP APPLICATION for their Program Eligibility Code.")
+  for(i in 1:5){
+    columnName = paste0("PROGRAMELIGIBILITYCODE", i)
+    values = pfacts[,columnName]
+    values[values == "NSLP APPLICATION"] = "APPLICATION"
+    pfacts[,columnName] = values
   }
 }
 
+values = pfacts$STATELOCATIONIDPROGRAMSERVICEPROVIDERBEDSCODE  # grab the BEDS code
+values[values == "10100860907"] = "010100860907"               # fix it
+pfacts$STATELOCATIONIDPROGRAMSERVICEPROVIDERBEDSCODE = values  # put it back
 
-for(i in 1:ncol(pfacts)){
-  pfacts[,i] = na.to.empty(pfacts[,i])
-}
-
-
-for(i in 1:5){
-  columnName = paste0("PROGRAMELIGIBILITYCODE", i)
-  values = pfacts[,columnName]
-  values[values == "NSLP APPLICATION"] = "APPLICATION"
-  pfacts[,columnName] = values
-}
-
-values = pfacts$STATELOCATIONIDPROGRAMSERVICEPROVIDERBEDSCODE
-values[values == "10100860907"] = "010100860907"
-pfacts$STATELOCATIONIDPROGRAMSERVICEPROVIDERBEDSCODE = values
-
-
-write.table(pfacts, file = "pfacts.csv", row.names = F, col.names = F, sep = ",", dec = ".") #output the fixed program facts file
-
+write.SIRS(pfacts, file = "pfacts.csv") #output the fixed program facts file
 
 
 #---------------------#
