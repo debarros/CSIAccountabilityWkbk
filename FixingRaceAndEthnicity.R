@@ -58,7 +58,8 @@ if(length(innacEthnic) > 0){
 Workbook$PSethnicity = powerschool$Ethnicity[match(Workbook$`Local.ID.(optional)`, powerschool$student_number)]
 unique(Workbook$PSethnicity)
 
-
+# The fixedRaces data.frame allows matching of PowerSchool Scheduling/Reporting ethnicity codes to the terms used in the workbook.
+# Note that Asian and Pacific Islander are matched to the same element.  This is what CSI wants.
 fixedRaces = data.frame(Old = c("B", "H", "A", "O", "M", "W", "I", "P"), 
                         New = c("Black or African American", "Hispanic or Latino", "Asian or Native Hawaiian/Other Pacific Islander",
                                 "Problem with PowerSchool ethnicity", "Multiracial", "White", "American Indian or Alaskan Native",
