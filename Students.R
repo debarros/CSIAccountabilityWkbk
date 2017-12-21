@@ -25,17 +25,11 @@ if(is.data.frame(inconsistencies)){                                             
 # Identify Cohort Issues ####
 #############################
 
-Workbook.InCohort = Workbook[toupper(Workbook$`Included.in.Graduation.Cohort?`) == "YES",]
-unique(Workbook.InCohort$`Cohort.Year.(year.1st.entered.9th)`)
-Workbook.InCohort.Unenrolled = Workbook.InCohort[toupper(Workbook.InCohort$`Still.Enrolled?`) == "NO",]
-unique(Workbook.InCohort.Unenrolled$`Cohort.Year.(year.1st.entered.9th)`)
-Workbook.Problems = Workbook.InCohort.Unenrolled[!VbetterComp(toupper(Workbook.InCohort.Unenrolled$Discharge.Reason), "GRADUATED"),]
-unique(Workbook.Problems$`Cohort.Year.(year.1st.entered.9th)`)
-Workbook.Problems = Workbook.Problems[Workbook.Problems$`Cohort.Year.(year.1st.entered.9th)` >= 2012,]
-Workbook.Problems = Workbook.Problems[,c("Local.ID.(optional)","Last.Name","First.Name","Cohort.Year.(year.1st.entered.9th)","Date.left.GTH","Discharge.Reason")]
-# Note that Workbook.Problems doesn't mean that there is a problem with the workbook
-# This just refers to the students who are in the cohort, but not enrolled
-write.csv(Workbook.Problems, file = "workbookproblems.csv")
+CohortIssues = UnEnrolledInCohort(Workbook, 6)
+if(nrow(CohortIssues) > 0){
+  print("There are cohort issues to resolve.  Check the file.")
+  write.csv(CohortIssues, file = "CohortIssues.csv")
+}
 
 
 ##################################
