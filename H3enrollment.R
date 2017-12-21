@@ -2,7 +2,9 @@
 
 library(openxlsx)
 
-ccTable = read.xlsx(xlsxFile = "ccTable1415.xlsx", sheet = 2)
+
+# This should pull from the cc table in PowerSchoolAll.xlsx
+# ccTable = read.xlsx(xlsxFile = "ccTable1415.xlsx", sheet = 2)
 
 str(ccTable)
 
