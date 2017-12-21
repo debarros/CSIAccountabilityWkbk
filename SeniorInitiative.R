@@ -59,8 +59,8 @@ Workbook3$UHR.Enough = Workbook3$UHR & ((Workbook3$Maths > 1) | Workbook3$Sci)
 
 
 
-
-enroll = read.csv("enrollments.csv")
+# This should be rewritten to use the cc tab from the PowerSchoolAll.xlsx file.
+# enroll = read.csv("enrollments.csv")
 
 
 GlobStuds = unique(enroll$X.01.Student_Number[enroll$X.02.course_name %in% c("Global History II 1-credit", "Global History II Honors- 1 credit")])
