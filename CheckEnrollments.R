@@ -1,6 +1,7 @@
 # CheckEnrollments.R
 
 # The purpose of this script is to identify errors in scheduling
+
 cc = cc.raw
 cc$dept = FullAlignment$Subject[match(x = cc$`[02]course_name`, FullAlignment$Course)] #add dept alignments
 sum(is.na(cc$dept)) #check for courses with no subject alignment

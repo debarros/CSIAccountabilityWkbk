@@ -4,34 +4,46 @@
 #### Demographics ####
 #--------------------#
 
-#load the demographics file produced by PowerSchool
+# Get the advisory portion of the cc table (for students missing race and ethnicity)
+cc.adv = cc.raw[grepl("Advisory", cc.raw$`[02]course_name`, T),]
+
+# Load the demographics file produced by PowerSchool
 demographics = read.csv(file.choose() ,header = F, stringsAsFactors = F)
 
 
-#Use the nysed template to assign the column names to the demographics file
+# Use the nysed template to assign the column names to the demographics file
 x = dBtools::GetNiceColumnNames("STUDENT LITE", templates)
 colnames(demographics) = x[1:ncol(demographics)]
 
 # reformat the demographics file
 demographics = DFna.to.empty(demographics)              # make blank spaces blank (not NA)
+
 gradelevels = demographics$CURRENTGRADELEVELGRADELEVEL  # grab grade levels
 gradelevels = as.character(gradelevels)                 # make Grade Level character to preserve 0's
 gradelevels[nchar(gradelevels) == 1] = "09"             # change single-digit grade levels to "09"
 demographics$CURRENTGRADELEVELGRADELEVEL = gradelevels  # put grade levels back in
-demographics[demographics[,24] == "68",24] = "068"      # change diploma type code 68 to 068
 
+demographics$GUIDANCECOUNSELORDISTRICTCODE = ""         # remove the guidance counselor codes
+
+dips = demographics$DIPLOMATYPECODECREDENTIALTYPECODE   # grab the diploma types
+dips[dips == "68"] = "068"                              # change diploma type code 68 to 068
+demographics$DIPLOMATYPECODECREDENTIALTYPECODE = dips   # put the diploma type codes back in
+
+
+# Deal with missing races
 races = demographics$ETHNICCODESHORTRACE1CODE           # grab races
 if(any(races == "")){                                   # Check for students missing race/ethnicity
-  write.csv(demographics[races == "",4:8], 
-            "missing student race and ethnicity.csv")
+  missRace = demographics[races == "",4:8]
+  missRace$Advisor = cc.adv$`[05]lastfirst`[match(missRace$STUDENTIDSCHOOLDISTRICTSTUDENTID, cc.adv$`[01]Student_Number`)]
+  missRace = missRace[order(missRace$Advisor, missRace$LASTNAMESHORTSTUDENTSLASTNAME),]
+  write.csv(missRace, paste0(OutFolder,"missing student race and ethnicity.csv"))
   print("There are students missing race and ethnicity.  Check the csv file.")
 } # /if there are blank races
 races[races == ""] = "B"                        # change missing race to Black
 demographics$ETHNICCODESHORTRACE1CODE = races   # put races back in
 
-demographics$GUIDANCECOUNSELORDISTRICTCODE = "" # remove the guidance counselor codes
 
-write.SIRS(demographics, "demographics.csv")    # output
+write.SIRS(demographics, paste0(OutFolder,"demographics.csv"))    # output
 
 
 
@@ -74,6 +86,7 @@ write.SIRS(pfacts, file = "pfacts.csv") #output the fixed program facts file
 #### Diploma types ####
 #---------------------#
 
+# Note sure what this section does
 demographics$DIPLOMATYPECODECREDENTIALTYPECODE
 unique(demographics$DIPLOMATYPECODECREDENTIALTYPECODE)
 

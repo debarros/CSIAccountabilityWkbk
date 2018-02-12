@@ -3,6 +3,8 @@
 # Generate a table of the URL's of all the demerit spreadsheets ####
 # Hopefully there is a faster way to do this that doesn't involve getting each url one at a time
 
+SW = function(x){suppressMessages(suppressWarnings(x))}
+
 urlTable = matrix(
   data = c(
     "5/24/17",  "https://docs.google.com/spreadsheets/d/1H6DnqfFcIhHwaiQ_EX6t-j9hFJAXjVRw_USKdCtUwMg/edit",
@@ -43,17 +45,23 @@ urlTable = matrix(
 
 urlTable = matrix(
   data = c(
-    '10/12/2017',  'https://docs.google.com/a/greentechhigh.org/spreadsheets/d/1HH60qGGLQcq11teigF1Lzo1eUomNEwGqc9iYSs0hUQ8/edit?usp=drivesdk',
-    '10/19/2017',  'https://docs.google.com/a/greentechhigh.org/spreadsheets/d/1QFH_G6uKwWfAUQ1pE648lrgENM63J5vQDS8EzIhP6lk/edit?usp=drivesdk',
-    '10/26/2017',  'https://docs.google.com/a/greentechhigh.org/spreadsheets/d/1YrqgENyOo1ok0uZ1lt7LiqGaxNSkEf8eRScVijU74bQ/edit?usp=drivesdk',
+    '10/12/2017', 'https://docs.google.com/a/greentechhigh.org/spreadsheets/d/1HH60qGGLQcq11teigF1Lzo1eUomNEwGqc9iYSs0hUQ8/edit?usp=drivesdk',
+    '10/19/2017', 'https://docs.google.com/a/greentechhigh.org/spreadsheets/d/1QFH_G6uKwWfAUQ1pE648lrgENM63J5vQDS8EzIhP6lk/edit?usp=drivesdk',
+    '10/26/2017', 'https://docs.google.com/a/greentechhigh.org/spreadsheets/d/1YrqgENyOo1ok0uZ1lt7LiqGaxNSkEf8eRScVijU74bQ/edit?usp=drivesdk',
     '10/5/2017',  'https://docs.google.com/a/greentechhigh.org/spreadsheets/d/1Mh6wMN6dDeOVuuLX5UGbFqVRUQlZ9cd1Z6PLGP7NWEo/edit?usp=drivesdk',
-    '11/16/2017',  'https://docs.google.com/a/greentechhigh.org/spreadsheets/d/1te7R7CMZm-SOBI5YmK5FYkH6AOdhbmSlL6SvfAp2-2U/edit?usp=drivesdk',
+    '11/16/2017', 'https://docs.google.com/a/greentechhigh.org/spreadsheets/d/1te7R7CMZm-SOBI5YmK5FYkH6AOdhbmSlL6SvfAp2-2U/edit?usp=drivesdk',
     '11/2/2017',  'https://docs.google.com/a/greentechhigh.org/spreadsheets/d/1JKmrMs9rylIzOYP82HIuAMeuZU48Zl6vfHYBIL_0BMg/edit?usp=drivesdk',
-    '11/21/2017',  'https://docs.google.com/a/greentechhigh.org/spreadsheets/d/1SctEmMOejlGaS8M-oAjndQbGkBIZ0n5B7herWmYDvNo/edit?usp=drivesdk',
+    '11/21/2017', 'https://docs.google.com/a/greentechhigh.org/spreadsheets/d/1SctEmMOejlGaS8M-oAjndQbGkBIZ0n5B7herWmYDvNo/edit?usp=drivesdk',
     '11/7/2017',  'https://docs.google.com/a/greentechhigh.org/spreadsheets/d/1SQJ7ylvgRFeNlg5NaWg7_ezCeI74xu7zLxjkX2VDqG8/edit?usp=drivesdk',
     '9/14/2017',  'https://docs.google.com/a/greentechhigh.org/spreadsheets/d/1PjxpkTQ3lWZ4w6AeJOYgAqyC6EZpFZLp6OCFb9rrals/edit?usp=drivesdk',
     '9/21/2017',  'https://docs.google.com/a/greentechhigh.org/spreadsheets/d/1VJw4XsZvjWWOv6MA4lR9exv9ihQS3EkoGew8ULncV6A/edit?usp=drivesdk',
-    '9/28/2017',  'https://docs.google.com/a/greentechhigh.org/spreadsheets/d/1easYECw9Qk20hz8FEsXjzkQPTe-j2gTQ9FVdN4T21Q4/edit?usp=drivesdk'), 
+    '9/28/2017',  'https://docs.google.com/a/greentechhigh.org/spreadsheets/d/1easYECw9Qk20hz8FEsXjzkQPTe-j2gTQ9FVdN4T21Q4/edit?usp=drivesdk', 
+    '12/20/2017',   'https://docs.google.com/spreadsheets/d/1pVbhafCl_eA3MkdnJ3J3dQqfxeCQxbPAoJzRiT8Bt1M/edit?usp=sharing',
+    '12/14/2017',   'https://docs.google.com/spreadsheets/d/1_iqXLUnEiurGqplhKlImoxOcvb6AxVU87jj2cIhY4WI/edit?usp=sharing',
+    '12/7/2017',    'https://docs.google.com/spreadsheets/d/1oHTLSeoAv1OXbSUt2wiFH-DeOj7kWW7sPE3zV8okGpA/edit?usp=sharing',
+    '11/30/2017',   'https://docs.google.com/spreadsheets/d/1WA2uZa3iYOxESILwUP1080AuM2zt33gRA7HfaRvi-HA/edit?usp=sharing',
+    '1/11/2018',    'https://docs.google.com/spreadsheets/d/1zA5P0Kv7IsV1rmw0jWu1-663vEzMrdhvAYDEN0KcteM/edit?usp=sharing',
+    '1/4/2018',     'https://docs.google.com/spreadsheets/d/1kWrsbiTRrYkYn66BUKBZypa3JhTUJQvQ3ipUor5U16c/edit?usp=sharing'),
   ncol = 2, byrow = T)
 
 
@@ -62,7 +70,7 @@ colnames(urlTable) = c("Date","URL")                                # Add column
 urlTable$Date2 = as.Date(urlTable$Date, format = "%m/%d/%Y")        # Add a date column that has actual date values
 urlTable = urlTable[order(urlTable$Date2),]                         # Sort the table by date
 rownames(urlTable) = NULL                                           # remove row names
-urlTable = urlTable[urlTable$Date2 < as.Date("2017-11-05"),]        # eliminate the entries from before the end of the quarter
+urlTable = urlTable[urlTable$Date2 < as.Date("2018-01-19"),]        # eliminate the entries from after the end of the quarter
 rownames(urlTable) = NULL                                           # remove row names again
 
 
@@ -71,21 +79,24 @@ rownames(urlTable) = NULL                                           # remove row
 nonStudents = c(111111111, 222222222, 333333333, 444444444)         # These are ID's that do not actually belong to students
 
 # Create a list containing all of the demerit worksheets
-demeritList = vector(mode = "list", length = nrow(urlTable))        # set up a list to hold data.frames of demerits
-for(i in 1:length(demeritList)){                                    # This loop is going to take a while
-  print(paste0(i, " of ", length(demeritList)))                     # Print the counter
-  currentSheet = gs_url(urlTable$URL[i], verbose = F)               # Get the current demerit spreadsheet
-  DemeritTable = gs_read(ss = currentSheet, ws = 1, verbose = F)    # Load it into a data.frame 
-  DemeritTable = DemeritTable[!(DemeritTable$ID %in% nonStudents),] # Remove the ID's of nonstudents
-  demeritList[[i]] = DemeritTable                                   # Load that data.frame into the list
-  names(demeritList)[i] = as.character(urlTable$Date2[i])           # Name the list element using the date
+demeritList = vector(mode = "list", length = nrow(urlTable))         # set up a list to hold data.frames of demerits
+for(i in 1:length(demeritList)){                                     # This loop is going to take a while
+  print(paste0(i, " of ", length(demeritList)))                      # Print the counter
+  currentSheet = gs_url(urlTable$URL[i], verbose = F)                # Get the current demerit spreadsheet
+  DemeritTable = SW(gs_read(ss = currentSheet, ws = 1, verbose = F)) # Load it into a data.frame 
+  DemeritTable = DemeritTable[!(DemeritTable$ID %in% nonStudents),]  # Remove the ID's of nonstudents
+  demeritList[[i]] = DemeritTable                                    # Load that data.frame into the list
+  names(demeritList)[i] = as.character(urlTable$Date2[i])            # Name the list element using the date
 }
 
 # Check them to make sure they worked
 if(!(all(unlist(lapply(X = demeritList, FUN = is.data.frame))))){
   print("There is a problem with one or more of the demerit spreadsheets.")
+} else {
+  print("The demerit sheets look OK so far.")
 }
 
+# Do some error checking
 for(i in 1:length(demeritList)){
   curSheet = demeritList[[i]]
   if(!("ID" %in% colnames(curSheet))){
@@ -96,7 +107,8 @@ for(i in 1:length(demeritList)){
   }
   theTypes = unlist(lapply(X = curSheet[,4:ncol(curSheet)], FUN = is.character))
   if(any(theTypes)){
-    print(paste0("The following columns in ", names(demeritList)[i], " are showing as character ", paste0(names(theTypes[theTypes]), collapse = " & ")))
+    print(paste0("The following columns in ", names(demeritList)[i], " are showing as character ", 
+                 paste0(names(theTypes[theTypes]), collapse = " & ")))
   }
   highestValue = betterMax(curSheet[,4:ncol(curSheet)])
   if(is.na(highestValue)){
@@ -108,7 +120,7 @@ for(i in 1:length(demeritList)){
 
 
 # Create a list containing all of the demerit totals by student by week
-demeritTotals = vector(mode = "list", length = nrow(urlTable)) # set up a list to hold demerit totals
+demeritTotals = vector(mode = "list", length = nrow(urlTable))       # set up a list to hold demerit totals
 for(i in 1:length(demeritList)){
   x = demeritList[[i]]                                               # Get the current demerit spreadsheet
   print(paste0(i, " ", colnames(x)[1]))                              # Print the counter and the name of the first column
@@ -132,33 +144,33 @@ AllDemeritTotals = as.data.frame(rbindlist(l = demeritTotals, use.names = T, fil
 
 # Calculate consecutive weeks by student ####
 
-Consecutive = integer(0)                                         # initialize vector of the max consecutive weeks of 0 demerits by student
+Consecutive = integer(0)                                         # initialize vector of max consecutive weeks of 0 demerits by student
 for(i in 2:ncol(AllDemeritTotals)){                              # for each column after the first one (ie for each student)
   entries = AllDemeritTotals[,i]                                 # Get the entries for that column (# demerits by week for that student)
   anyDemeritsByWeek = as.integer(VbetterComp(entries,0))         # Determine which weeks had 0 demerits
   DemeritString = paste0(anyDemeritsByWeek, collapse = "")       # Collapse it into a string of 1's and 0's
   y = strsplit(x = DemeritString, split = "0", fixed = T)[[1]]   # Get strings of consecutive 1's (consecutive weeks with 0 demerits)
-  Consecutive = c(Consecutive,max(nchar(y)))                     # Get the length of the longest run of 0 demerits and append it to Consecutive
+  Consecutive = c(Consecutive,max(nchar(y)))                     # Get length of longest run of 0 demerits and append to Consecutive
 } # /for
 Consecutive = data.frame(consecWeeks = Consecutive)              # Convert it to a data.frame
 Consecutive$ID = colnames(AllDemeritTotals)[-1]                  # Add student ID's
-Consecutive$LastName =   Workbook$Last.Name[match(Consecutive$ID, Workbook$`Local.ID.(optional)`)]                                   # Add last name
-Consecutive$FirstName =  Workbook$First.Name[match(Consecutive$ID, Workbook$`Local.ID.(optional)`)]                                  # Add first name
-Consecutive$GradeLevel = Workbook$`Grade.(leave.blank.if.no.longer.enrolled)`[match(Consecutive$ID, Workbook$`Local.ID.(optional)`)] # add grade level
+Consecutive$LastName =   Workbook$Last[match(Consecutive$ID, Workbook$`Local.ID`)]     # Add last name
+Consecutive$FirstName =  Workbook$First[match(Consecutive$ID, Workbook$`Local.ID`)]    # Add first name
+Consecutive$GradeLevel = Workbook$`Grade.`[match(Consecutive$ID, Workbook$`Local.ID`)] # add grade level
 Consecutive = Consecutive[!is.na(Consecutive$GradeLevel),]
 
 # Summarize the info ####
 summary(as.factor(Consecutive$consecWeeks))
 summary(Consecutive)
 sqrt(var(Consecutive$consecWeeks))
-ggplot(data = Consecutive, mapping = aes(consecWeeks)) +         # plot no. of students w/ each possible length of consecutive demeritless weeks
+ggplot(data = Consecutive, mapping = aes(consecWeeks)) +         # plot no. of students by length of consecutive demeritless weeks
   geom_histogram(bins = max(Consecutive$consecWeeks) +1, col="red") + 
   labs(y = "Number of Students")
 
 
 # Generate output ####
 Consecutive = Consecutive[order(Consecutive$consecWeeks, decreasing = T),]
-write.csv(x = Consecutive, file = "ConsecutiveWeeksOfNoDemerits.csv", row.names = F)
+write.csv(x = Consecutive, file = paste0(OutFolder, "ConsecutiveWeeksOfNoDemerits.csv"), row.names = F)
 
 # Get the total number of demerits per student ####
 TotalDemeritsByStudent = apply(X = AllDemeritTotals[2:ncol(AllDemeritTotals)], MARGIN = 2, FUN = sum, na.rm = T) 
@@ -166,6 +178,8 @@ summary(TotalDemeritsByStudent)
 
 
 # Max demerit earner info ####
+# This checks to see whether there are any individual entries in a demerit spreadsheet that are just crazy
+# The output is the largest number of demerits assigned by one teacher in each week to the student with the most overall demerits
 maxEarner = names(TotalDemeritsByStudent[TotalDemeritsByStudent == max(TotalDemeritsByStudent)]) # ID's of the max demerit earner(s) 
 for(i in 1:length(demeritList)){
   x = demeritList[[i]]

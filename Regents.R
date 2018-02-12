@@ -1,6 +1,6 @@
 # Regents.R
 # This is for reconciling regents scores in the regents database, powerschool, and the accountability workbook
-# Note: Run the MainScript first, but do not remove no-show students
+# Note: Run the MainScript first.
 
 # Save the raw versions in case the raw data is needed later (e.g., restarting this script from the top without rerunning MainScript)
 RegentsDB = RegentsDBraw
@@ -30,7 +30,7 @@ column_names = expand.grid(c("Scaled.Score", "Performance.Level", "Exam.Year.and
                              "Earth.Science", "Chemistry", "Physics", "US.History", 
                              "Global", "Common.Core.ELA", "Common.Core.Algebra", 
                              "Common.Core.Geometry", "Common.Core.Algebra.2"))
-column_names = c("Local.ID.(optional)",apply(X = column_names[,c(2,1)], MARGIN = 1, FUN = paste0, collapse = ""))
+column_names = c("Local.ID.(optional)", apply(column_names[,c(2,1)], 1, paste0, collapse = ""))
 Workbook.sub = Workbook.sub[,column_names]  # subset the workbook to the relevant columns
 names(Workbook.sub)[1] = "ID"               # change the first column to be named ID
 studentlist = as.double(Workbook.sub[,1])   # this needs to be a double precision because some ID's are very long
@@ -81,7 +81,7 @@ CompareMatrix = CreateCompareMatrix(studentlist, Exams, dbMatrix, wkbkMatrix)
 if(sum(!MbetterComp(CompareMatrix, dbMatrix) & !is.na(CompareMatrix))){                    # if any best scores not in the database
   temp = which(!MbetterComp(CompareMatrix, dbMatrix) & !is.na(CompareMatrix), arr.ind = T) # create matrix of locations (row and column)
   badDB = data.frame(ID = rownames(temp), Exam = Exams[temp[,2]])                          # create a list of the... something?
-  write.csv(badDB,file = "ScoresMissingFromDataBase.csv")                                  # export the file
+  write.csv(badDB,file = paste0(OutFolder,"ScoresMissingFromDataBase.csv"))                # export the file
   print("Resolve the scores missing from the Database")
 } else {
   print("No scores missing from the Database")
@@ -91,7 +91,7 @@ if(sum(!MbetterComp(CompareMatrix, dbMatrix) & !is.na(CompareMatrix))){         
 #     Those are instances in which a student has a score in the workbook but not in the database
 
 # if there are any best scores not in the workbook, create output to be pasted into the Workbook
-if(sum(!MbetterComp(CompareMatrix, wkbkMatrix) & !is.na(CompareMatrix))){ 
+if(sum(!MbetterComp(CompareMatrix, wkbkMatrix) & !is.na(CompareMatrix)) > 0){ 
   wkbkOutput = data.frame(ID = rownames(CompareMatrix)) # set up the output object
   temp = CompareMatrix                                  # create a temporary version of the best scores matrix
   rownames(temp) = NULL                                 # get rid of the rownames in temp so it can be merged with the output object
@@ -120,12 +120,13 @@ if(sum(!MbetterComp(CompareMatrix, wkbkMatrix) & !is.na(CompareMatrix))){
   wkbkOutput[,mathcols] = ""                                                       # add blank columns
   colNams = colnames(wkbkOutput)                                                   # get wkbkOutput column names
   colNams = c("Cohort", colNams[1:4], mathcols, colNams[5:(ncol(wkbkOutput) - 7)]) # reorder the column names
-  wkbkOutput = wkbkOutput[,columnNames]                                            # reorder the columns of wkbkOutput
+  wkbkOutput = wkbkOutput[,colNams]                                                # reorder the columns of wkbkOutput
   colnames(wkbkOutput)[1] = "Cohort"
   
+  # Should the next line use dBtools::DFna.to.empty() ?
   for (i in 1:ncol(wkbkOutput)){wkbkOutput[,i] = as.character(wkbkOutput[,i])} # convert everything to character
   wkbkOutput[is.na(wkbkOutput)] = ""                                           # replace NA values with blanks
-  write.csv(wkbkOutput,file = "PasteThisIntoTheWorkBook.csv")                  # export the file
+  write.csv(wkbkOutput, paste0(OutFolder,"PasteThisIntoTheWorkBook.csv"))      # export the file
   print("paste scores into the workbook")
 } else {
   print("Workbook is fine")
@@ -199,7 +200,7 @@ if(sum(!MbetterComp(CatCompareMatrix, psMatrix) & !is.na(CatCompareMatrix))){   
     } # /if-else
   } # /for loop
   
-  write.csv(badPS,file = "ScoresMissingFromPowerSchool.csv") #export the file
+  write.csv(badPS,file = paste0(OutFolder, "ScoresMissingFromPowerSchool.csv"))     # export the file
   print("Enter scores in PowerSchool")
 } else {
   print("No scores to add to PowerSchool")
@@ -256,14 +257,14 @@ if(exists("badWork") + exists("badPS") == 2){
   studentsToUse = NA
 } # /if-else-else-else
 
-if(all(is.na(studentsToUse))){
+if(!all(is.na(studentsToUse))){
   badStudents = RegentsDBraw[which(RegentsDBraw$StudentNumber %in% studentsToUse),]
   badStudents$First = Workbook$First.Name[match(badStudents$StudentNumber, Workbook$`Local.ID.(optional)`)]
   badStudents$Last = Workbook$Last.Name[match(badStudents$StudentNumber, Workbook$`Local.ID.(optional)`)]
   vars = names(badStudents)
   x = length(vars)
   badStudents = badStudents[,c(vars[x-1], vars[x], vars[1:(x-2)])]
-  write.csv(badStudents, file = "ScoresAndSessionsForStudentsWithScoreIssues.csv") # export the file
+  write.csv(badStudents, file = paste0(OutFolder,"ScoresAndSessionsForStudentsWithScoreIssues.csv")) # export the file
   print("Look at the composite file for students with score issues")
 } else {
   print("There are no issues to resolve")

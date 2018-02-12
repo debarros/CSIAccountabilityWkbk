@@ -3,12 +3,8 @@
 
 #### Start with MainScript.R, then come back to this. ####
 
-# Read the SAT file for PSAT data
-PSATraw.xlsx <- openxlsx::read.xlsx(
-  xlsxFile = "J:/SAT's/college_board_data.xlsx",
-  sheet = "PSAT",
-  startRow = 1,
-  na.strings = c(""))
+# Make a copy of the PSAT object
+PSATraw.xlsx <- PSAT.raw
 
 # Ensure that the data is of a numeric type. Empty cells can cause them to be read as character vectors.
 PSATraw.xlsx$Read  <- as.integer(PSATraw.xlsx$Read)
@@ -57,23 +53,16 @@ PSAT1 <- subset(PSATsort, PSATsort$Rank == 1)
 PSAT2 <- subset(PSATsort, PSATsort$Rank == 2)
 
 # Get a list of years
-Years <- c(2006:as.integer(format(Sys.Date(), "%Y")))
+Years <- c(2006:schoolYear())
 
-# Create a CSV for each cohort year with best and second best PSAT scores
+# Create a CSV for each cohort year with best and second best PSAT scores (as needed)
 newFrame <- NULL
 for (i in Years) {
-  i
-  # Get the sheet with the cohort
-  sheetName <- paste0(as.character(i), " Cohort")
-  
-  cohort.xlsx <- openxlsx::read.xlsx(
-    xlsxFile = "J:/Accountability Spreadsheet/working copy/Green Tech Cohort Data Collection Workbook.xlsx", 
-    sheet    = sheetName,
-    colNames = TRUE,
-    startRow = 2)
+  # Get the cohort
+  cohort.xlsx <- Workbook[Workbook$`Cohort.Year.(year.1st.entered.9th)` == i,]
   
   # Create a matching dataframe
-  newFrame$ID <- cohort.xlsx$`Local.ID.(optional)`
+  newFrame <- data.frame(ID = cohort.xlsx$`Local.ID.(optional)`)
   
   # Add first PSATs
   newFrame$Read1  <- as.integer(PSAT1$Read[match(newFrame$ID, PSAT1$ID)])
@@ -87,17 +76,31 @@ for (i in Years) {
   newFrame$Write2 <- as.integer(PSAT2$Write[match(newFrame$ID, PSAT2$ID)])
   newFrame$Year2  <- as.integer(PSAT2$Year[match(newFrame$ID, PSAT2$ID)])
   
-  # Write output to a CSV
-  write.csv(
-    x         = newFrame,
-    file      = paste0(as.character(i), "Cohort_PSAT_Scores.csv"),
-    na        = "",
-    row.names = FALSE)
+  # Compare to existing scores
+  cohort.xlsx = cohort.xlsx[,c("Local.ID.(optional)","PSAT.Read.1", "PSAT.Math.1", "PSAT.Write.1", "PSAT.Year.1", "PSAT.Read.2", "PSAT.Math.2", "PSAT.Write.2", "PSAT.Year.2")]
+  for(j in 2:ncol(cohort.xlsx)){ cohort.xlsx[,j] = as.integer(cohort.xlsx[,j]) }
+  comparison1 = MbetterComp(as.matrix(newFrame[,2:9]), as.matrix(cohort.xlsx[,2:9]))
+  if(!(all(comparison1))){
+    comparison2 = MbetterGreater(as.matrix(newFrame[,2:9]), as.matrix(cohort.xlsx[,2:9])) + comparison1  
+    if(any(comparison2 == 0)){
+      print(paste0("There are PSAT scores in the ", i , " tab of the workbook that are better than what has been generated."))
+    } else {
+      # Write output to a CSV
+      write.csv(
+        x         = newFrame,
+        file      = paste0(OutFolder, as.character(i), "Cohort_PSAT_Scores.csv"),
+        na        = "",
+        row.names = FALSE)  
+    }
+  } # /if the generated scores are different from the existing scores 
   
   # Cleanup, prep for next pass
   cohort.xlsx <- NULL
   newFrame    <- NULL
 }
 
-#### At this point, paste from the CSVs to the Accountability Workbook. ####
-#### Make sure not to erase data that is already there!!!! ####
+# At this point, paste from the CSVs to the Accountability Workbook. 
+# The only cohorts that need updating are the ones for which CSVs were generated
+# If no CSVs were generated, nothing needs to be updated
+# If there are any messages printed about existing scores being better than what was generated, look at those carefully.
+

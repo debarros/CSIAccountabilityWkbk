@@ -123,7 +123,7 @@ if(nrow(newmatches) > 0){
   print("see the newmatches.csv file")
   print("Use the program service upload template to import these into PowerSchool.")
   print("For the eligibility code, use 'DCMP'.")
-  write.csv(x = newmatches, file = "newmatches.csv")
+  write.csv(newmatches, paste0(OutFolder,"newmatches.csv"))
 } else {
   print("There are no new matches to upload to PowerSchool")
 } # /if-else
@@ -161,7 +161,7 @@ if(sum(freeAddDCMP) > 0){
 forms.new = forms[!(forms$Student.Number %in% allMatches$Local.ID),] # leave out the ones who are already in allMatches
 forms.new = forms.new[!(forms.new$Student.Number %in% lunch$STUDENTIDSCHOOLDISTRICTSTUDENTID),] # leave out the ones who are already in PowerSchool
 if(nrow(forms.new) > 0){
-  write.csv(x = forms.new, file = "newFormMatches.csv")
+  write.csv(forms.new, paste0(OutFolder, "newFormMatches.csv"))
   print("There are new matches to upload")
   print("see the file newFormMatches.csv")
   print("Use the program service upload template to import these into PowerSchool.")
@@ -206,34 +206,7 @@ usableStudents = StudentLiteExtract[StudentLiteExtract$EnrolledOnBEDSDay,]
 
 LunchByDistrict = table(usableStudents[,c("Lunch", "DISTRICTCODEOFRESIDENCE")], useNA = "always")
 DistrictCodes = dimnames(LunchByDistrict)$DISTRICTCODEOFRESIDENCE
-DORlookup = as.data.frame(matrix(c(
-  "NY010100", 	"Albany",
-  "NY270100", 	"Amsterdam",
-  "NY491302", 	"Averill Park",
-  "NY010306", 	"Bethlehem",
-  "NY541102", 	"Coblskl-Rchmdvl",
-  "NY010500", 	"Cohoes",
-  "NY490301", 	"East Greenbush",
-  "NY010701", 	"Green Island",
-  "NY010802", 	"Guilderland",
-  "NY490601", 	"Lansingburgh",
-  "NY010615", 	"Menands",
-  "NY530301", 	"Niskayuna",
-  "NY010623", 	"North Colonie",
-  "NY010402", 	"Ravena-Coeymans-Selkirk",
-  "NY491200", 	"Rensselaer",
-  "NY530515", 	"Rotterdam (Mohonasen)",
-  "NY530501",	  "Rotterdam (Schalmont)",
-  "NY530600", 	"Schenectady",
-  "NY491501", 	"Schodack",
-  "NY530202", 	"Scotia Glenville",
-  "NY520302", 	"Shenendehowa",
-  "NY010601", 	"South Colonie",
-  "NY491700", 	"Troy",
-  "NY011200", 	"Watervliet",
-  "NY490804",	  "Wynantskill"
-), ncol = 2, byrow = T), stringsAsFactors = F)
-DistrictNames = DORlookup$V2[match(DistrictCodes, DORlookup$V1)]
+DistrictNames = DORs$District.Name[match(DistrictCodes, DORs$District.ID)]
 dimnames(LunchByDistrict)$DISTRICTCODEOFRESIDENCE = DistrictNames
 write.csv(LunchByDistrict, "lunchByDistrict.csv")
 
@@ -244,8 +217,8 @@ write.csv(LunchByDistrict, "lunchByDistrict.csv")
 
 # This is useful for completing the IMF
 # It requires that all FRPL records (from both DCMP and lunch forms) be entered in PowerSchool already.
-x = EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE == ""               # which exist dates are missing?
-EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE[x] = schoolYear("end")  # set missing exit dates to the end of the year
+x = EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE == ""               # which exit dates are missing?
+EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE[x] = as.character(schoolYear("end"))  # set missing exit dates to the end of the year
 # convert exit date to date type
 EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE = as.Date(EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE)
 # convert entry date to date type
@@ -258,7 +231,7 @@ BEDSstudents = EnrollmentExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID[y]    # Get a 
 # subset lunch services to just students who were enrolled on BEDS day
 bedsLunchServices = lunch[lunch$STUDENTIDSCHOOLDISTRICTSTUDENTID %in% BEDSstudents,] 
 summary(factor(bedsLunchServices$PROGRAMSCODEPROGRAMSERVICECODE))                    # Summarize the results
-
+length(BEDSstudents) - nrow(bedsLunchServices)
 
 #------------------------------------------#
 #### Update the Accountability Workbook ####

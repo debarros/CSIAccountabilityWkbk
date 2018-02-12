@@ -7,7 +7,11 @@ library(reshape2)
 library(openxlsx)
 library(dBtools)
 library(googlesheets)
-library(data.table)
+library(stringr)
+SWSM(library(data.table, quietly = T, verbose = F))
+
+# Location of the college board workbook
+CollegeBoardLocation = "\\\\stuthin2/Data/SAT's/college_board_data.xlsx"
 
 # Location of the CSI accountability workbook
 AcctWkBkLocation = "\\\\stuthin2\\Data\\Accountability Spreadsheet\\working copy\\Green Tech Cohort Data Collection Workbook.xlsx"
@@ -26,3 +30,6 @@ RDBLocation = "RegentsDB.csv"
 
 # Location of direct cert files from NYSSIS
 LunchLocation = "\\\\stuthin2/data/2017-2018\\lunch"
+
+# Location of output files
+OutFolder = paste0(getwd(), "/Temporary Output/")
