@@ -54,11 +54,11 @@ results$session = paste0(substr(currentSession, 1, 4), " ", month.name[as.intege
 results$location = "GTH"
 results$InfoSource = "ASAP"
 results$Grade = studentInfo$grade_level[match(results$Student.ID, studentInfo$student_number)]
+results$Exam = testLookup$Database[match(results$TestName2, testLookup$ASAP)]
+results = results[,c("Student.ID", "Exam", "Score", "Grade", "session", "location", "InfoSource")]
 
+write.csv(x = results, file = paste0(OutFolder, "paste into regents database.csv"))
 
-results = results[,c("Student.ID", "TestName2", "Score", "Grade", "session", "location", "InfoSource")]
-
-unique(results$TestName2)
 
 #-------------------------#
 #### From ASAP Exports ####
