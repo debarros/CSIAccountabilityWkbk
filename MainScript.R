@@ -35,7 +35,7 @@ powerschoolraw = read.xlsx(xlsxFile = PSLocation, sheet = 1)
 
 
 
-#-----------------------------#
+#-----------------------------#   What is this for?
 #### PowerSchool F2 grades ####
 #-----------------------------#
 # Export all F2 grades from the storedgrades table in PowerSchool
@@ -97,6 +97,15 @@ templates = loadWorkbook(TemplateLocation)
 # Load the table of Districts of Residence.  These are typed up, not exported from anywhere.
 DORs = read.xlsx(xlsxFile = PSLocation, sheet = "DOR")
 
+
+
+
+
+#------------------------#
+#### Test Name Lookup ####
+#------------------------#
+# Load the table of exam names.  These are typed up, not exported from anywhere.
+testLookup = read.xlsx(xlsxFile = PSLocation, sheet = "Test Names")
 
 
 
