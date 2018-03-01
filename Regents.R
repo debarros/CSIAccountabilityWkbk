@@ -240,7 +240,7 @@ if(sum(temp) > 0){                                   # if there are any best sco
       badWork$Session[i] = dbSessions[thisrow,thiscolumn[usethisone]]
     } # /if-else
   } # /for loop
-  write.csv(badWork,file = "ScoresInPowerSchoolButNowhereElse.csv") #export the file
+  write.csv(badWork,file = paste0(OutFolder, "ScoresInPowerSchoolButNowhereElse.csv")) # export the file
   print("There are mysterious PowerSchool scores")
 } else {
   print("No mysterious PowerSchool scores found")
