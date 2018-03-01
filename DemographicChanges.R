@@ -35,9 +35,9 @@ for(i in 1:nrow(students)){
 
 students$AnyChange = apply(students[,c("StreetChange", "MuniChange", "ZipChange")], MARGIN = 1, FUN = any)
 
-write.csv(x = students[students$AnyChange,1:3], file = "StudentsWithAddressChanges.csv")
+write.csv(x = students[students$AnyChange,1:3], file = paste0(OutFolder, "StudentsWithAddressChanges.csv"))
 
 studentIssues = studentIssues[,c("version", "STUDENTIDSCHOOLDISTRICTSTUDENTID","FIRSTNAMESHORTSTUDENTSFIRSTNAME","LASTNAMESHORTSTUDENTSLASTNAME","Address")]
-write.csv(x = studentIssues, file = "AllAddressChanges.csv", row.names = F)
+write.csv(x = studentIssues, file = paste0(OutFolder,"AllAddressChanges.csv"), row.names = F)
 
 
