@@ -54,8 +54,8 @@ F2$StudentName = powerschoolraw$lastfirst[match(F2$`[1]Student_Number`, table = 
 gs_auth() #this may launch a browser so you can sign into your account
 # Get the course-subject alignments
 CourseSubject = SWSM(gs_url(CourseSubjectAddress))
-alignment = SWSM(gs_read(ss = CourseSubject, ws = 1))
-alignment2 = SWSM(gs_read(ss = CourseSubject, ws = 2))
+alignment = SWSM(gs_read(ss = CourseSubject, ws = 1, verbose = F))
+alignment2 = SWSM(gs_read(ss = CourseSubject, ws = 2, verbose = F))
 alignment$Course[alignment$Course == "AP Global History I"][1] = "AP Global History I "
 FullAlignment = rbind.data.frame(alignment, alignment2, stringsAsFactors = F)
 
@@ -126,3 +126,18 @@ ACT.raw = read.xlsx(xlsxFile = CollegeBoardLocation, sheet = "ACT")
 
 
 
+#------------------------#
+#### Attendance Codes ####
+#------------------------#
+# Load the table of attendance codes.  
+# This is an export of the entire Attendance_Code table in PowerSchool.
+attendCodes = read.xlsx(xlsxFile = PSLocation, sheet = "Attendance Codes")
+
+
+
+#--------------------#
+#### Period Codes ####
+#--------------------#
+# Load the table of period codes.  
+# This is an export of the entire Period table in PowerSchool.
+periodCodes = read.xlsx(xlsxFile = PSLocation, sheet = "Periods")
