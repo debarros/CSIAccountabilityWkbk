@@ -43,7 +43,7 @@ races[races == ""] = "B"                        # change missing race to Black
 demographics$ETHNICCODESHORTRACE1CODE = races   # put races back in
 
 
-write.SIRS(demographics, paste0(OutFolder,"demographics.csv"))    # output
+write.SIRS(demographics, paste0(OutFolder, "demographics.csv"))    # output
 
 
 
