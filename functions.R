@@ -1,7 +1,7 @@
 #functions.R
 
 library(abind)
-library(ggplot2)
+library(ggplot2, quietly = T, verbose = F)
 library(scales)
 library(reshape2)
 library(openxlsx)
