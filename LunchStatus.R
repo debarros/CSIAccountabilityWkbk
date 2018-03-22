@@ -35,7 +35,7 @@ colnames(progserv) = GetNiceColumnNames("PROGRAMS FACT", templates)
 colnames(StudentLiteExtract) = GetNiceColumnNames("STUDENT LITE", templates)[1:ncol(StudentLiteExtract)]
 colnames(EnrollmentExtract) = GetNiceColumnNames("SCHOOL ENTRY EXIT", templates)
 
-# Get just the lunch services
+# Get just the lunch services that are already in powerschool
 lunch = progserv[progserv$PROGRAMSCODEPROGRAMSERVICECODE %in% c(5806, 5817),]
 # Students who currently are set as Reduced Price lunch in powerschool
 reducedLunch = lunch[lunch$PROGRAMSCODEPROGRAMSERVICECODE == 5806,]            
@@ -256,7 +256,7 @@ for(i in 1:nrow(wkbkLunch)){
   }
 } # /for
 
-write.csv(wkbkLunch, "Workbook Lunch Status.csv")
+write.csv(wkbkLunch, paste0(Outfolder, "Workbook Lunch Status.csv"))
 
 # Go paste the workbook lunch status into the workbook, one tab at a time
 
