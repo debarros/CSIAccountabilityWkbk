@@ -21,7 +21,7 @@ Workbookraw.xlsx = read.xlsx(
 Workbook = Workbookraw.xlsx[!is.na(Workbookraw.xlsx$`Local.ID.(optional)`),-c(1,2,3)]
 #Format the date variables
 dateVars = c("Date.First.Enrolled.at.GTH", "Date.left.GTH", "Date.1st.Enrolled.in.9th.Grade.(anywhere)","Date.of.Confirmation")
-for(i in dateVars){  Workbook[,i] = as.Date(Workbook[,i], origin = "1899-12-30") }
+for(i in dateVars){  Workbook[,i] = xlDate(Workbook[,i]) }
 
 
 
@@ -32,6 +32,16 @@ for(i in dateVars){  Workbook[,i] = as.Date(Workbook[,i], origin = "1899-12-30")
 # Note: update the data in PowerSchoolAll.xlsx before loading it
 # There is a tab in the file that shows what fields to export
 powerschoolraw = read.xlsx(xlsxFile = PSLocation, sheet = 1)
+#Format the date variables
+dateVars = c("DistrictEntryDate", "EntryDate", "ExitDate")
+for(i in dateVars){ 
+  dates = powerschoolraw[,i]
+  dates[dates == "0/0/0"] = NA
+  dates = as.numeric(dates)
+  dates = xlDate(dates)
+  powerschoolraw[,i] = dates 
+}
+
 
 
 
@@ -42,7 +52,7 @@ powerschoolraw = read.xlsx(xlsxFile = PSLocation, sheet = 1)
 # Note: The export will take a really long time
 F2 = read.xlsx(xlsxFile = PSLocation, sheet = "F2 Grades")
 F2 = F2[F2$`[1]Student_Number` != 0,]
-F2$DateStored = as.Date(F2$DateStored, origin = "1899-12-30")
+F2$DateStored = xlDate(F2$DateStored)
 F2$StudentName = powerschoolraw$lastfirst[match(F2$`[1]Student_Number`, table = powerschoolraw$student_number)]
 
 
@@ -51,7 +61,7 @@ F2$StudentName = powerschoolraw$lastfirst[match(F2$`[1]Student_Number`, table = 
 #### Course-Subject Alignments ####
 #---------------------------------#
 # Sign in to google
-gs_auth() #this may launch a browser so you can sign into your account
+SWSM(gs_auth()) #this may launch a browser so you can sign into your account
 # Get the course-subject alignments
 CourseSubject = SWSM(gs_url(CourseSubjectAddress))
 alignment = SWSM(gs_read(ss = CourseSubject, ws = 1, verbose = F))
@@ -78,6 +88,9 @@ RegentsDBraw = read.csv(RDBLocation, stringsAsFactors = FALSE)
 #----------------------------#
 # Load the current term's enrollment records (exported from the cc table in powerschool)
 cc.raw = read.xlsx(xlsxFile = PSLocation, sheet = "cc")
+dateVars = c("DateEnrolled", "DateLeft")
+for(i in dateVars){  cc.raw[,i] = xlDate(cc.raw[,i]) }
+
 
 
 
