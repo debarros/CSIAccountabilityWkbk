@@ -31,7 +31,7 @@ for(i in dateVars){  Workbook[,i] = xlDate(Workbook[,i]) }
 # Read in student data from powerschool
 # Note: update the data in PowerSchoolAll.xlsx before loading it
 # There is a tab in the file that shows what fields to export
-powerschoolraw = read.xlsx(xlsxFile = PSLocation, sheet = 1)
+powerschoolraw = read.xlsx(xlsxFile = PSLocation, sheet = "Student Table")
 #Format the date variables
 dateVars = c("DistrictEntryDate", "EntryDate", "ExitDate")
 for(i in dateVars){ 
@@ -154,3 +154,24 @@ attendCodes = read.xlsx(xlsxFile = PSLocation, sheet = "Attendance Codes")
 # Load the table of period codes.  
 # This is an export of the entire Period table in PowerSchool.
 periodCodes = read.xlsx(xlsxFile = PSLocation, sheet = "Periods")
+
+
+
+#------------------#
+#### Attendance ####
+#------------------#
+# Load the table of attendance entries.  
+# This is an export of the Attendance table in PowerSchool, with YearID set to the current year.
+attendance = read.xlsx(xlsxFile = PSLocation, sheet = "Attendance")
+dateVars = c("Att_Date")
+for(i in dateVars){  attendance[,i] = xlDate(attendance[,i]) }
+
+
+
+
+#------------------------#
+#### Current Students ####
+#------------------------#
+
+currentStudents = drive_download(as_id(CurrentStudentsAddress), path = paste0(OutFolder, "currentStudents.csv"), overwrite = T)
+currentStudents = read.csv(paste0(OutFolder, "currentStudents.csv"), stringsAsFactors = F)
