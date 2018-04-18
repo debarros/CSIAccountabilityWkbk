@@ -3,8 +3,6 @@
 # Generate a table of the URL's of all the demerit spreadsheets ####
 # Hopefully there is a faster way to do this that doesn't involve getting each url one at a time
 
-SW = function(x){suppressMessages(suppressWarnings(x))}
-
 urlTable = matrix(
   data = c(
     "5/24/17",  "https://docs.google.com/spreadsheets/d/1H6DnqfFcIhHwaiQ_EX6t-j9hFJAXjVRw_USKdCtUwMg/edit",
@@ -61,7 +59,16 @@ urlTable = matrix(
     '12/7/2017',    'https://docs.google.com/spreadsheets/d/1oHTLSeoAv1OXbSUt2wiFH-DeOj7kWW7sPE3zV8okGpA/edit?usp=sharing',
     '11/30/2017',   'https://docs.google.com/spreadsheets/d/1WA2uZa3iYOxESILwUP1080AuM2zt33gRA7HfaRvi-HA/edit?usp=sharing',
     '1/11/2018',    'https://docs.google.com/spreadsheets/d/1zA5P0Kv7IsV1rmw0jWu1-663vEzMrdhvAYDEN0KcteM/edit?usp=sharing',
-    '1/4/2018',     'https://docs.google.com/spreadsheets/d/1kWrsbiTRrYkYn66BUKBZypa3JhTUJQvQ3ipUor5U16c/edit?usp=sharing'),
+    '1/4/2018',     'https://docs.google.com/spreadsheets/d/1kWrsbiTRrYkYn66BUKBZypa3JhTUJQvQ3ipUor5U16c/edit?usp=sharing',
+    '1/18/2018', 'https://docs.google.com/spreadsheets/d/1WSAQUAMqMGOGtwWkUkZEmicFATtoQ8QsXp9hESyie2s/edit?usp=sharing',
+    '2/1/2018', 'https://docs.google.com/spreadsheets/d/1TsrzC6oflgVd50zpVxMOE5rIeSIq2KU0KqDB0L_iblY/edit?usp=sharing',
+    '2/8/2018', 'https://docs.google.com/spreadsheets/d/1pfYp9raevJNkuWcYrPnGOv6gWyBh2SwORd71TEUZo3s/edit?usp=sharing',
+    '2/15/2018', 'https://docs.google.com/spreadsheets/d/17TVHlIl5HnS9ObZIJm0Es5LLPhQ0M-B11h2H1A-UHvE/edit?usp=sharing',
+    '3/1/2018', 'https://docs.google.com/spreadsheets/d/16rqEzZywFwMRh6YVfSN2Z9VaWLu8r2GPAXqEikjZGcU/edit?usp=sharing',
+    '3/8/2018', 'https://docs.google.com/spreadsheets/d/1_2CqzYdak_JDjcvi6OF91lBNH6Gnqn-SwzIB7SkVkhY/edit?usp=sharing',
+    '3/15/2018', 'https://docs.google.com/spreadsheets/d/1IfFunsgFUjkHBi9ZkG2B0pzznyKWqWdXk7J-bBFAIEY/edit?usp=sharing',
+    '3/22/2018', 'https://docs.google.com/spreadsheets/d/10IMvZ2yVWx3BO-JNhh5gnA7NMQENoMRV5maaxo_RZIM/edit?usp=sharing',
+    '3/28/2018', 'https://docs.google.com/spreadsheets/d/1B70f6HpNDAc8hb5rbs4IY-BAYOfLwdHCPVz60oOFl7g/edit?usp=sharing'),
   ncol = 2, byrow = T)
 
 
@@ -70,7 +77,7 @@ colnames(urlTable) = c("Date","URL")                                # Add column
 urlTable$Date2 = as.Date(urlTable$Date, format = "%m/%d/%Y")        # Add a date column that has actual date values
 urlTable = urlTable[order(urlTable$Date2),]                         # Sort the table by date
 rownames(urlTable) = NULL                                           # remove row names
-urlTable = urlTable[urlTable$Date2 < as.Date("2018-01-19"),]        # eliminate the entries from after the end of the quarter
+urlTable = urlTable[urlTable$Date2 < as.Date("2018-03-31"),]        # eliminate the entries from after the end of the quarter
 rownames(urlTable) = NULL                                           # remove row names again
 
 
@@ -79,14 +86,15 @@ rownames(urlTable) = NULL                                           # remove row
 nonStudents = c(111111111, 222222222, 333333333, 444444444)         # These are ID's that do not actually belong to students
 
 # Create a list containing all of the demerit worksheets
-demeritList = vector(mode = "list", length = nrow(urlTable))         # set up a list to hold data.frames of demerits
-for(i in 1:length(demeritList)){                                     # This loop is going to take a while
-  print(paste0(i, " of ", length(demeritList)))                      # Print the counter
-  currentSheet = gs_url(urlTable$URL[i], verbose = F)                # Get the current demerit spreadsheet
-  DemeritTable = SW(gs_read(ss = currentSheet, ws = 1, verbose = F)) # Load it into a data.frame 
-  DemeritTable = DemeritTable[!(DemeritTable$ID %in% nonStudents),]  # Remove the ID's of nonstudents
-  demeritList[[i]] = DemeritTable                                    # Load that data.frame into the list
-  names(demeritList)[i] = as.character(urlTable$Date2[i])            # Name the list element using the date
+
+demeritList = vector(mode = "list", length = nrow(urlTable))           # set up a list to hold data.frames of demerits
+for(i in 1:length(demeritList)){                                       # This loop is going to take a while
+  print(paste0(i, " of ", length(demeritList)))                        # Print the counter
+  currentSheet = gs_url(urlTable$URL[i], verbose = F)                  # Get the current demerit spreadsheet
+  DemeritTable = SWSM(gs_read(ss = currentSheet, ws = 1, verbose = F)) # Load it into a data.frame 
+  DemeritTable = DemeritTable[!(DemeritTable$ID %in% nonStudents),]    # Remove the ID's of nonstudents
+  demeritList[[i]] = DemeritTable                                      # Load that data.frame into the list
+  names(demeritList)[i] = as.character(urlTable$Date2[i])              # Name the list element using the date
 }
 
 # Check them to make sure they worked
@@ -107,7 +115,7 @@ for(i in 1:length(demeritList)){
   }
   theTypes = unlist(lapply(X = curSheet[,4:ncol(curSheet)], FUN = is.character))
   if(any(theTypes)){
-    print(paste0("The following columns in ", names(demeritList)[i], " are showing as character ", 
+    print(paste0("The following columns in ", names(demeritList)[i], " are showing as character:  ", 
                  paste0(names(theTypes[theTypes]), collapse = " & ")))
   }
   highestValue = betterMax(curSheet[,4:ncol(curSheet)])
@@ -191,5 +199,4 @@ for(i in 1:length(demeritList)){
     }
   }
 }
-
 
