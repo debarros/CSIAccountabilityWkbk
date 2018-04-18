@@ -8,6 +8,7 @@ library(openxlsx)
 library(dBtools)
 library(googlesheets)
 library(stringr)
+library(googledrive)
 SWSM(library(data.table, quietly = T, verbose = F))
 
 # Location of the college board workbook
@@ -21,6 +22,9 @@ TemplateLocation = "\\\\stuthin2/Data/SIRS manuals templates guides etc/2017-18e
 
 # URL of the Course-Subject alignment table
 CourseSubjectAddress = "https://docs.google.com/a/greentechhigh.org/spreadsheets/d/17QhVYZkjbx34M6wBvtHUYa_XrRUlRbOtuOsQ4P5l-nk/edit?usp=sharing"
+
+# URL of the nightly student csv export
+CurrentStudentsAddress = "https://drive.google.com/file/d/1EnnUpm2B-CZ1zYDyYoml6RLKi_o47Xky/view?usp=sharing"
 
 # Location of the PowerSchool exports file
 PSLocation = "PowerSchoolAll.xlsx"
