@@ -45,15 +45,29 @@ for(i in dateVars){
 
 
 
-#-----------------------------#   What is this for?
+#-----------------------------#
 #### PowerSchool F2 grades ####
 #-----------------------------#
 # Export all F2 grades from the storedgrades table in PowerSchool
 # Note: The export will take a really long time
+# This gets used by Credits.R, FromBio.R, and MathCourseAssignments.R
 F2 = read.xlsx(xlsxFile = PSLocation, sheet = "F2 Grades")
 F2 = F2[F2$`[1]Student_Number` != 0,]
 F2$DateStored = xlDate(F2$DateStored)
 F2$StudentName = powerschoolraw$lastfirst[match(F2$`[1]Student_Number`, table = powerschoolraw$student_number)]
+
+
+
+
+#---------------------------------------#
+#### PowerSchool Current Year grades ####
+#---------------------------------------#
+# Export all grades from the storedgrades table in PowerSchool, setting TermID >= current term id
+# Export should also include fields [1]Student_Number and [1]LastFirst
+currentGrades = read.xlsx(xlsxFile = PSLocation, sheet = "Current Year Grades")
+currentGrades$DateStored = xlDate(currentGrades$DateStored)
+
+
 
 
 
