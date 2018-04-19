@@ -39,16 +39,21 @@ thisYear.bad = thisYear[thisYear$Att_Date > thisYear$exitDate,]                 
 if(nrow(thisYear.bad) > 0){
   thisYear.bad = thisYear.bad[,c("[1]LastFirst", "[1]Student_Number", "Att_Date", "exitDate", "CCID", "ID")]   # Remove unnecessary columns
   thisYear.bad$SectionEntry = cc$DateEnrolled[match(thisYear.bad$CCID, cc$ID)]                                 # Add the date the student entered the section
+  thisYear.bad$SectionExit = cc$DateLeft[match(thisYear.bad$CCID, cc$ID)]                                      # Add the date the student exited the section
   thisYear.bad$StudentID = powerschool$ID[match(thisYear.bad$`[1]Student_Number`, powerschool$student_number)] # Add the internal powerschool ID for the student
   thisYear.bad$Action = ""                                                                                     # Initialize the Action field
   for(i in 1:nrow(thisYear.bad)){
     act = "Delete Attendance.  "                                                                               # Mark the attendance record for deletion
     if(thisYear.bad$SectionEntry[i] > thisYear.bad$exitDate[i]){                                               # If student entered section after leaving school,
-      act = paste0(act, "Delete from cc table.")                                                               # Mark the section enrollment record for deletion
+      act = paste0(act, "Delete from cc table.  ")                                                             # Mark the section enrollment record for deletion
     } else {
       if(cc$TermID[cc$ID == thisYear.bad$CCID[i]] > 0){                                                        # If the section enrollment is active
-        act = paste0(act, "Exit the student from the section.")                                                # Mark that it should be exited
-      } # /if the student is still active in the section
+        act = paste0(act, "Exit the student from the section.  ")                                              # Mark that it should be exited
+      } else {
+        if(thisYear.bad$SectionExit[i] > thisYear.bad$exitDate[i]){                                            # If the section enrollment ends after the student left,
+          act = paste0(act, "Change the section exit date.  ")                                                 # mark that the section exit date should be changed
+        } # /if
+      } # /if-else
     } # /if-else section enrollment began after the student transfered out of GTH
     thisYear.bad$Action[i] = act
   } # /for
