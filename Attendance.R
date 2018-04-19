@@ -1,10 +1,13 @@
 # Attendance.R
 
-today = read.xlsx(file.choose())
+#---------------------------------------------------#
+#### Find seniors who cut class in the afternoon ####
+#---------------------------------------------------#
+
+today = read.xlsx(file.choose())  # read in an export of the attendance table for just one day
 powerschool = powerschoolraw
 cc = cc.raw
 
-# Just seniors who cut class in the afternoon ####
 today.mtg = today[today$Att_Mode_Code == "ATT_ModeMeeting",]
 attendCodes = DFna.to.empty(attendCodes)
 today.mtg$Att_Code = attendCodes$Att_Code[match(today.mtg$Attendance_CodeID, attendCodes$ID)]
@@ -26,20 +29,36 @@ today.mtg = today.mtg[order(today.mtg$`[1]LastFirst`, today.mtg$Period),]
 write.csv(x = today.mtg, file = paste0(OutFolder, "absences.csv"))
 
 
-# find situations where a student has attendance records after he exited ####
-# thisYear = today
-thisYear = read.xlsx(file.choose())
-thisYear$Att_Date = xlDate(thisYear$Att_Date)
+
+#----------------------------------------------------#
+#### Find attendance records after student exited ####
+#----------------------------------------------------#
+thisYear = attendance
 thisYear$exitDate = powerschool$ExitDate[match(thisYear$`[1]Student_Number`, powerschool$student_number)]
 thisYear.bad = thisYear[thisYear$Att_Date > thisYear$exitDate,]
-thisYear.bad = thisYear.bad[,c("[1]LastFirst", "[1]Student_Number", "Att_Date", "exitDate", "CCID")]
-thisYear.bad$SectionEntry = cc$DateEnrolled[match(thisYear.bad$CCID, cc$ID)]
-thisYear.bad$Action = "Exit"
-thisYear.bad$Action[thisYear.bad$SectionEntry > thisYear.bad$exitDate] = "Delete"
-
-write.csv(x = thisYear.bad, file = paste0(OutFolder, "cc deletions.csv"))
-
-
+if(nrow(thisYear.bad) > 0){
+  thisYear.bad = thisYear.bad[,c("[1]LastFirst", "[1]Student_Number", "Att_Date", "exitDate", "CCID", "ID")]
+  thisYear.bad$SectionEntry = cc$DateEnrolled[match(thisYear.bad$CCID, cc$ID)]
+  thisYear.bad$StudentID = powerschool$ID[match(thisYear.bad$`[1]Student_Number`, powerschool$student_number)]
+  thisYear.bad$Action = ""
+  for(i in 1:nrow(thisYear.bad)){
+    act = "Delete Attendance.  "
+    if(thisYear.bad$SectionEntry[i] > thisYear.bad$exitDate[i]){
+      act = paste0(act, "Delete from cc table.")
+    } else {
+      if(cc$TermID[cc$ID == thisYear.bad$CCID[i]] > 0){
+        act = paste0(act, "Exit the student from the section.")
+      } # /if the student is still active in the section
+    } # /if-else section enrollment began after the student transfered out of GTH
+    thisYear.bad$Action[i] = act
+  } # /for
+  write.csv(x = thisYear.bad, file = paste0(OutFolder, "cc deletions.csv"))
+  print(paste0("Open the file and follow the instructions for each record.  ",
+               "Note that the ID column is the ID field value from the Attendance table.  ", 
+               "Use DDA to delete records."))
+} else {
+  print("There are no attendance records to correct.  Yay!")
+} # /if-else there are attendance records to correct
 
 
 
