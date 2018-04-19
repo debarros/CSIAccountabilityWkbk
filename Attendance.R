@@ -34,20 +34,20 @@ write.csv(x = today.mtg, file = paste0(OutFolder, "absences.csv"))
 #### Find attendance records after student exited ####
 #----------------------------------------------------#
 thisYear = attendance
-thisYear$exitDate = powerschool$ExitDate[match(thisYear$`[1]Student_Number`, powerschool$student_number)]
-thisYear.bad = thisYear[thisYear$Att_Date > thisYear$exitDate,]
+thisYear$exitDate = powerschool$ExitDate[match(thisYear$`[1]Student_Number`, powerschool$student_number)]      # Add the date the student exited the school
+thisYear.bad = thisYear[thisYear$Att_Date > thisYear$exitDate,]                                                # Limit to attendance records dated after exit
 if(nrow(thisYear.bad) > 0){
-  thisYear.bad = thisYear.bad[,c("[1]LastFirst", "[1]Student_Number", "Att_Date", "exitDate", "CCID", "ID")]
-  thisYear.bad$SectionEntry = cc$DateEnrolled[match(thisYear.bad$CCID, cc$ID)]
-  thisYear.bad$StudentID = powerschool$ID[match(thisYear.bad$`[1]Student_Number`, powerschool$student_number)]
-  thisYear.bad$Action = ""
+  thisYear.bad = thisYear.bad[,c("[1]LastFirst", "[1]Student_Number", "Att_Date", "exitDate", "CCID", "ID")]   # Remove unnecessary columns
+  thisYear.bad$SectionEntry = cc$DateEnrolled[match(thisYear.bad$CCID, cc$ID)]                                 # Add the date the student entered the section
+  thisYear.bad$StudentID = powerschool$ID[match(thisYear.bad$`[1]Student_Number`, powerschool$student_number)] # Add the internal powerschool ID for the student
+  thisYear.bad$Action = ""                                                                                     # Initialize the Action field
   for(i in 1:nrow(thisYear.bad)){
-    act = "Delete Attendance.  "
-    if(thisYear.bad$SectionEntry[i] > thisYear.bad$exitDate[i]){
-      act = paste0(act, "Delete from cc table.")
+    act = "Delete Attendance.  "                                                                               # Mark the attendance record for deletion
+    if(thisYear.bad$SectionEntry[i] > thisYear.bad$exitDate[i]){                                               # If student entered section after leaving school,
+      act = paste0(act, "Delete from cc table.")                                                               # Mark the section enrollment record for deletion
     } else {
-      if(cc$TermID[cc$ID == thisYear.bad$CCID[i]] > 0){
-        act = paste0(act, "Exit the student from the section.")
+      if(cc$TermID[cc$ID == thisYear.bad$CCID[i]] > 0){                                                        # If the section enrollment is active
+        act = paste0(act, "Exit the student from the section.")                                                # Mark that it should be exited
       } # /if the student is still active in the section
     } # /if-else section enrollment began after the student transfered out of GTH
     thisYear.bad$Action[i] = act
@@ -70,9 +70,9 @@ if(nrow(thisYear.bad) > 0){
 # Make a copy of the powerschool export that includes only current students
 powerschool = powerschoolraw[powerschoolraw$student_number %in% currentStudents$Student_Number,]
 
-attendance = attendance[attendance$Att_Mode_Code == "ATT_ModeDaily",]                          # limit to daily attendance
-attendance$Desc = attendCodes$Description[match(attendance$Attendance_CodeID, attendCodes$ID)] # pull in the description
-attendance$code = attendCodes$Att_Code[match(attendance$Attendance_CodeID, attendCodes$ID)]    # pull in the code
+attendance = attendance[attendance$Att_Mode_Code == "ATT_ModeDaily",]                            # limit to daily attendance
+attendance$Desc = attendCodes$Description[match(attendance$Attendance_CodeID, attendCodes$ID)]   # pull in the description
+attendance$code = attendCodes$Att_Code[match(attendance$Attendance_CodeID, attendCodes$ID)]      # pull in the code
 
 # Get lists of attendance descriptions/statuses
 statuses = unique(attendCodes$Description)
