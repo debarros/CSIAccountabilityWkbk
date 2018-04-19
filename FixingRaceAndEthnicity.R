@@ -28,8 +28,8 @@ demographics = read.csv(file.choose() ,header = F, stringsAsFactors = F)
 demographics = DFna.to.empty(demographics)
 # Use the nysed template to assign the column names to the demographics file
 colnames(demographics) = dBtools::GetNiceColumnNames("STUDENT LITE", templates)
-demographics = demographics[demographics$ETHNICCODESHORTRACE1CODE != "",]
-demographics$PSRace = powerschool$Ethnicity[match(demographics$STUDENTIDSCHOOLDISTRICTSTUDENTID, powerschool$student_number)]
+demographics = demographics[demographics$ETHNICCODESHORTRACE1CODE != "",] # remove students who have no race at all
+demographics$PSRace = powerschool$Ethnicity[match(demographics$STUDENTIDSCHOOLDISTRICTSTUDENTID, powerschool$student_number)] # add the PS race code
 demographics$PSRace = na.to.empty(demographics$PSRace)
 demographics$AccurateRace = demographics$ETHNICCODESHORTRACE1CODE
 for(i in 1:nrow(demographics)){
@@ -49,7 +49,7 @@ innacEthnic = demographics$STUDENTIDSCHOOLDISTRICTSTUDENTID[!(VbetterComp(demogr
 if(length(innacEthnic) > 0){
   print("There are students with innacurate Scheduling/Reporting Ethnicity on the demographics page.  See the csv.")
   print("Fix all that stuff then reload the data and continue.")
-  write.csv(demographics[demographics$STUDENTIDSCHOOLDISTRICTSTUDENTID %in% innacEthnic, demoVars], "innacuratePSethnicities.csv")
+  write.csv(demographics[demographics$STUDENTIDSCHOOLDISTRICTSTUDENTID %in% innacEthnic, demoVars], paste0(OutFolder, "innacuratePSethnicities.csv"))
 } else {
   print("There are no innacurate Scheduling/Reporting Ethnicities in PowerSchool. Continue with this script.")
 }
