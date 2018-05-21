@@ -196,3 +196,45 @@ p5 = ggplot(SAT.Remove, aes(x=PSAT.Total, y=Total, color=Prep)) +
 #Choose the model with the best adjusted R squared value
 
 
+
+#---------------------------------------------------#
+#### Computations for the Accountability Dossier ####
+#---------------------------------------------------#
+
+
+# Measure 1 - Each year, the average performance of students in the 10th grade 
+# will exceed the state average on the PSAT tests in Critical Reading and Math.
+# The subset for this is the set of students who were enrolled in 10th grade 
+# as of the date of the PSAT in the relevant year.
+PSAT = PSAT.raw
+str(PSAT)
+PSAT.10 = PSAT[PSAT$Grade == 10,]
+PSAT.10.relevant = PSAT.10[PSAT.10$Year == 2016,]
+str(PSAT.10.relevant)
+PSAT.10.relevant$Math = as.numeric(PSAT.10.relevant$Math)
+summary(PSAT.10.relevant)
+
+
+# Measure 2 - Each year, the average performance of students in the 12th grade will 
+# exceed the state average on the SAT or ACT tests in reading and mathematics.
+# seniors in the relevant year who had enrolled before the deadline in May of the 
+# prior school year to take the June SAT, and remained enrolled until after the 
+# first SAT administration in the Fall of the relevant year (usually in October).  
+# For example, for the 15-16 report, the subset of students includes those who were 
+# in 12th grade during the 15-16 school year, enrolled prior to May 27, 2015, and 
+# were still enrolled as of October 3, 2015.
+
+SAT = SAT.raw
+str(SAT)
+
+z = read.csv(file.choose(), stringsAsFactors = F)
+x = z
+colnames(x) = GetNiceColumnNames("STUDENT LITE", templates)[1:ncol(x)]
+x = x[x$CURRENTGRADELEVELGRADELEVEL == 12,]
+x$enrollDate = Workbook$Date.First.Enrolled.at.GTH[match(x$STUDENTIDSCHOOLDISTRICTSTUDENTID, Workbook$`Local.ID.(optional)`)]
+x$exitDate = Workbook$Date.left.GTH[match(x$STUDENTIDSCHOOLDISTRICTSTUDENTID, Workbook$`Local.ID.(optional)`)]
+x = x[x$enrollDate < as.Date("2016-05-25"),]
+x = x[x$exitDate > as.Date("2016-10-01"),]
+SAT.relevant = SAT[SAT$ID %in% x$STUDENTIDSCHOOLDISTRICTSTUDENTID,] 
+summary(SAT.relevant)
+
