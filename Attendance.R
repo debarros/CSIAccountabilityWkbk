@@ -131,3 +131,115 @@ attRiskOutput = powerschool[powerschool$attendanceRiskz > 0.5, c("student_number
 attRiskOutput = attRiskOutput[order(attRiskOutput$attendanceRiskCategory, attRiskOutput$totalAbsences, decreasing = T),]
 sum(attRiskOutput$attendanceRiskCategory > 0)
 write.csv(x = attRiskOutput, file = paste0(OutFolder, "attendanceRisk.csv"))
+
+
+
+
+
+
+#-----------------------------------------------------------#
+#### Find meeting attendance for nonexistent enrollments ####
+#-----------------------------------------------------------#
+
+cc = cc.raw
+sum(is.na(attendance$CCID)) # should be 0
+
+att.mtg = attendance[attendance$CCID != 0,]
+att.day = attendance[attendance$CCID == 0,]
+
+att.mtg$CourseName = cc$`[02]course_name`[match(att.mtg$CCID, cc$ID)] # for meeting attendance, get the course name
+
+sum(is.na(cc$`[02]course_name`)) # should be 0
+
+badenr = setdiff(att.mtg$CCID, cc$ID) # enrollments for which there is attendance but nothing in the cc table
+
+att.badenr = att.mtg[att.mtg$CCID %in% badenr,] # get all the mtg attendance for enrollments that have nothing in the cc table
+unique(att.badenr$`[1]LastFirst`) # check these students to see if they actually attended gth
+unique(att.badenr$StudentID) # if they didn't, find the attendance records with these student IDs and delete them
+att.badenr$ID  # this is the ID for all the mtg attendance records that have no associate course
+
+
+
+#------------------------------------------------------------#
+#### Find mismatches between daily and meeting attendance ####
+#------------------------------------------------------------#
+
+cc = cc.raw
+sum(is.na(attendance$CCID)) # should be 0
+
+statuses = unique(attendCodes$Description)
+absentcodes = intersect(statuses, c("Absence Unexcused", "Absence Excused", "Suspension", "Expelled", "Night School Absent", "ISS Absent unexcused", "ISS Absent Excused", "Night School Absent Excused"))
+AUcodes = intersect(statuses, c("Absence Unexcused", "Night School Absent", "ISS Absent unexcused"))
+presentcodes = c("Present", "Present ISS", "Night School Present")
+
+attendance$Desc = attendCodes$Description[match(attendance$Attendance_CodeID, attendCodes$ID)]   # pull in the description
+attendance$code = attendCodes$Att_Code[match(attendance$Attendance_CodeID, attendCodes$ID)]      # pull in the code
+attendance$StudDate = paste0(attendance$`[1]Student_Number`, " - " ,attendance$Att_Date)
+
+att.mtg = attendance[attendance$CCID != 0,]
+att.day = attendance[attendance$CCID == 0,]
+
+att.mtg$CourseName = cc$`[02]course_name`[match(att.mtg$CCID, cc$ID)] # for meeting attendance, get the course name
+att.mtg$Teacher = cc$`[05]lastfirst`[match(att.mtg$CCID, cc$ID)] # for meeting attendance, get the course name
+att.mtg$period = periodCodes$Abbreviation[match(att.mtg$PeriodID, periodCodes$ID)]
+sum(is.na(cc$`[02]course_name`)) # should be 0
+att.mtg = att.mtg[att.mtg$CourseName != "Lunch",]
+
+students = unique(attendance$`[1]Student_Number`)
+dates = unique(attendance$Att_Date)
+
+att.day.pres = att.day[att.day$Desc %in% presentcodes,]
+att.day.pres$mtgPres = 0
+att.day.pres$mtgAbs = 0
+for(i in 1:nrow(att.day.pres)){
+  StudDate = att.day.pres$StudDate[i]
+  att.day.pres$mtgPres[i] = sum(att.mtg$StudDate == StudDate & att.mtg$Desc %in% presentcodes)
+  att.day.pres$mtgAbs[i] = sum(att.mtg$StudDate == StudDate & att.mtg$Desc %in% absentcodes)
+}
+
+table(att.day.pres[,c("mtgPres", "mtgAbs")])
+
+att.day.pres[att.day.pres$mtgPres == 0 & att.day.pres$mtgAbs > 0, c("StudDate", "[1]LastFirst")]
+
+
+
+
+
+
+att.day.abs = att.day[att.day$Desc %in% absentcodes,]
+att.day.abs$mtgPres = 0
+att.day.abs$mtgAbs = 0
+for(i in 1:nrow(att.day.abs)){
+  StudDate = att.day.abs$StudDate[i]
+  att.day.abs$mtgPres[i] = sum(att.mtg$StudDate == StudDate & att.mtg$Desc %in% presentcodes)
+  att.day.abs$mtgAbs[i] = sum(att.mtg$StudDate == StudDate & att.mtg$Desc %in% absentcodes)
+}
+
+table(att.day.abs[,c("mtgPres", "mtgAbs")])
+
+att.day.abs.prob = att.day.abs[att.day.abs$mtgPres > 0, c("StudDate", "[1]LastFirst", "Att_Date")]
+nrow(att.day.abs.prob)
+x = summary(factor(att.day.abs.prob$`[1]LastFirst`))
+summary(x)
+summary(factor(att.day.abs.prob$Att_Date))
+summary(summary(factor(att.day.abs.prob$Att_Date)))
+
+
+att.mtg$problem = F
+for(i in 1:nrow(att.day.abs.prob)){
+  StudDate = att.day.abs.prob$StudDate[i]
+  att.mtg$problem[att.mtg$StudDate == StudDate & att.mtg$Desc %in% presentcodes] = T
+}
+
+att.mtg.prob = att.mtg[att.mtg$problem,c("[1]LastFirst", "[1]Student_Number", "Att_Date", "Desc", "CourseName", "Teacher", "period")]
+colnames(att.mtg)
+att.mtg.prob$period = factor(att.mtg.prob$period, levels = sort(unique(att.mtg.prob$period)))
+att.mtg.prob$Teacher = factor(att.mtg.prob$Teacher, levels = sort(unique(att.mtg.prob$Teacher)))
+summary(factor(att.mtg.prob$Teacher))
+
+summary(att.mtg.prob$period)
+
+table(att.mtg.prob[,c("Teacher", "period")])
+
+
+write.csv(att.day.abs.prob, paste0(OutFolder, "Attendance issues.csv"))
