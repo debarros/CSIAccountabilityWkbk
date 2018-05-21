@@ -38,11 +38,12 @@ if(any(races == "")){                                   # Check for students mis
   missRace = missRace[order(missRace$Advisor, missRace$LASTNAMESHORTSTUDENTSLASTNAME),]
   write.csv(missRace, paste0(OutFolder,"missing student race and ethnicity.csv"))
   print("There are students missing race and ethnicity.  Check the csv file.")
-} # /if there are blank races
-races[races == ""] = "B"                        # change missing race to Black
-demographics$ETHNICCODESHORTRACE1CODE = races   # put races back in
-
-
+  races[races == ""] = "B"                        # change missing race to Black
+  demographics$ETHNICCODESHORTRACE1CODE = races   # put races back in
+} else {
+  print("No students are missing race and ethnicity information.")
+} # /if=else there are blank races
+  
 write.SIRS(demographics, paste0(OutFolder, "demographics.csv"))    # output
 
 
