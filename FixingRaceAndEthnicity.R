@@ -4,6 +4,7 @@
 # This script uses the Student Lite extract, the PowerSchool Students table, and the Accountability Workbook.
 # It tries to find errors and missing information in each location and provide correct info where possible.
 # This does not look for students who are missing their race codes in PowerSchool.  Use the Level0 script for that.
+# This does not provide a summary of race and ethnic information.  Use the Race and Ethnicity script for that.
 
 #-------------------------------#
 #### PowerSchool Ethnicities ####
