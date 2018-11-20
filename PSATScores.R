@@ -16,6 +16,12 @@ PSATraw.xlsx$Score <- rowSums(PSATraw.xlsx[,c("Read","Math","Write")], na.rm=TRU
 
 # Get cohort data
 PSATraw.xlsx$Cohort <- as.integer(Workbook$`Cohort.Year.(year.1st.entered.9th)`[match(PSATraw.xlsx$ID, Workbook$`Local.ID.(optional)`)])
+if(sum(is.na(PSATraw.xlsx$Cohort)) > 0){
+  print("Warning!  A student has a bad ID.")
+  print(PSATraw.xlsx[is.na(PSATraw.xlsx$Cohort),])
+} else {
+  print("Yay!  No messed up student ID's.")
+}
 
 # Sort by Cohort, ID, then Score (descending)
 PSATsort <- PSATraw.xlsx[with(PSATraw.xlsx, order(Cohort, ID, -Score)),]
@@ -81,9 +87,15 @@ for (i in Years) {
   for(j in 2:ncol(cohort.xlsx)){ cohort.xlsx[,j] = as.integer(cohort.xlsx[,j]) }
   comparison1 = MbetterComp(as.matrix(newFrame[,2:9]), as.matrix(cohort.xlsx[,2:9]))
   if(!(all(comparison1))){
+    entries = which(!comparison1, arr.ind = T)
+    entryRows = unique(entries[,1])
+    newFrame[entryRows,]
     comparison2 = MbetterGreater(as.matrix(newFrame[,2:9]), as.matrix(cohort.xlsx[,2:9])) + comparison1  
     if(any(comparison2 == 0)){
       print(paste0("There are PSAT scores in the ", i , " tab of the workbook that are better than what has been generated."))
+      entries = which(comparison2 == 0, arr.ind = T)
+      entryRows = unique(entries[,1])
+      newFrame[entryRows,]
     } else {
       # Write output to a CSV
       write.csv(
