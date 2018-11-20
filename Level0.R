@@ -8,7 +8,7 @@
 cc.adv = cc.raw[grepl("Advisory", cc.raw$`[02]course_name`, T),]
 
 # Load the demographics file produced by PowerSchool
-demographics = read.csv(file.choose() ,header = F, stringsAsFactors = F)
+demographics = read.csv(file.choose(), header = F, stringsAsFactors = F)
 
 
 # Use the nysed template to assign the column names to the demographics file
