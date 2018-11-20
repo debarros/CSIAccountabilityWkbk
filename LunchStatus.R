@@ -16,6 +16,8 @@
 #### Load Data ####
 #-----------------#
 
+powerschool = powerschoolraw
+
 # get the file of state matches downloaded from the nyssis website
 # You must open the file in excel, save it, and close it again before importing it here
 # Make sure that it goes in the lunch folder for the current year, and begins with "nyssis_lunch"
@@ -26,14 +28,14 @@ NyssisSnap = NyssisFile[NyssisFile$Certification.Method == "SNAP",]
 NyssisMedicaid = NyssisFile[NyssisFile$Certification.Method == "MEDICAID",]
 
 # generate the enrollment, student lite, and program service extracts from PowerSchool and load them here
-EnrollmentExtract = read.csv(file = file.choose(), header = F, stringsAsFactors = F)
+EnrollExt = read.csv(file = file.choose(), header = F, stringsAsFactors = F)
 StudentLiteExtract = read.csv(file = file.choose(), header = F, stringsAsFactors = F)
 progserv = read.csv(file = file.choose(), header = F)
 
 # Add column names to the SIRS extracts
 colnames(progserv) = GetNiceColumnNames("PROGRAMS FACT", templates)
 colnames(StudentLiteExtract) = GetNiceColumnNames("STUDENT LITE", templates)[1:ncol(StudentLiteExtract)]
-colnames(EnrollmentExtract) = GetNiceColumnNames("SCHOOL ENTRY EXIT", templates)
+colnames(EnrollExt) = GetNiceColumnNames("SCHOOL ENTRY EXIT", templates)
 
 # Get just the lunch services that are already in powerschool
 lunch = progserv[progserv$PROGRAMSCODEPROGRAMSERVICECODE %in% c(5806, 5817),]
@@ -68,12 +70,13 @@ forms = forms[forms$Status != "D",]         # leave out the ones who are Denied 
 
 # Which of this year's students do not appear in the NYSSIS extract?
 StudentsToCheck = setdiff(StudentLiteExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID, NyssisFile$Local.ID)
-write(x = paste0(StudentsToCheck, collapse = ","), file = "studentsToCheck.txt")
+write(x = paste0(StudentsToCheck, collapse = ","), file = paste0(OutFolder,"studentsToCheck.txt"))
 
 # Go to the current working directory, open the text file, and search powerschool for those students.  
-# Export them with all relevant fields.
+# Export them with all relevant fields. (phone numbers, addresses, cities, states, zip codes, DOB, Father, Mother, Guardian)
 # Paste the data into an excel workbook
-
+# Save it in the current year Lunch folder in the data drive
+# name it something like "studentsToCheck (2017-10-05).xlsx"
 
 #----------------------------------------------#
 #### Bulk Upload 2 - making the upload file ####
@@ -96,17 +99,21 @@ CNMS.MakeBulkUpload(xlsxFile = file.choose(), singleGender = "M")
 # Go through the results and find matches.  When matches are found, enter them on the Results tab.
 # Once the results tab has been populated, continue:
 
-bulkMatches = read.xlsx(xlsxFile = "\\\\stuthin2/data/2017-2018/lunch/Bulk Search Results (2017-10-10).xlsx", sheet = "Results")
+bulkMatches = read.xlsx(xlsxFile = "\\\\stuthin2/data/2018-2019/lunch/Bulk Search Results (2018-10-24).xlsx")
+bulkMatches$P12.First.Name = powerschool$First_name[match(bulkMatches$Local.ID, powerschool$student_number)] 
+bulkMatches$P12.Last.Name = powerschool$Last_Name[match(bulkMatches$Local.ID, powerschool$student_number)] 
+bulkMatches = bulkMatches[,c("Local.ID", "P12.First.Name", "P12.Last.Name", "Certification.Method", "Case.Number(s)")]
+colnames(bulkMatches) = colnames(allMatches)
 allMatches = rbindlist(l = list(allMatches, bulkMatches))
 allMatches = allMatches[order(allMatches$Certification.Method, decreasing = T),]
 allMatches = allMatches[!duplicated(allMatches$Local.ID),]
 summary(allMatches)
 summary(factor(allMatches$Certification.Method))
-write.csv(x = allMatches, file = "allmatches.csv")
+write.csv(x = allMatches, file = paste0(OutFolder, "allmatches.csv"))
 
 unmatchedIDs = setdiff(StudentLiteExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID, allMatches$Local.ID) # ID's of unmatched students 
 unmatchedIDs = StudentLiteExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID %in% unmatchedIDs # Logical, which rows have unmatched students
-write.csv(x = StudentLiteExtract[unmatchedIDs, 4:8], file = "unmatchedStudents.csv") # output unmatched students
+write.csv(x = StudentLiteExtract[unmatchedIDs, 4:8], file = paste0(OutFolder,"unmatchedStudents.csv")) # output unmatched students
 
 # Inform the relevant people about the number of matches.
 # Send the two csv's to whoever needs them.
@@ -140,18 +147,22 @@ if(sum(reducedToSwitch) > 0){
 
 
 # Students who currently have free lunch, but not the DCMP eligibility code
-freeLunch$DCMP = FALSE        # Initialize the DCMP variable
-for(i in 1:nrow(freeLunch)){  # Determine which students have the DCMP code
-  freeLunch$DCMP[i] = any(freeLunch[i,paste0("PROGRAMELIGIBILITYCODE",1:6)] == "DCMP")
-} # /for
-freeAddDCMP = freeLunch[!freeLunch$DCMP,] # Subset to just those who don't have the DCMP code
-freeAddDCMP = allMatches$Local.ID %in% freeAddDCMP$STUDENTIDSCHOOLDISTRICTSTUDENTID  # Find students with free lunch in powerschool who need the DCMP code
-if(sum(freeAddDCMP) > 0){
-  print("The following students are set as Free lunch, but need to have DCMP added to their program eligibility codes.")
-  print(allMatches[freeAddDCMP,])
+if(nrow(freeLunch) > 0){
+  freeLunch$DCMP = FALSE        # Initialize the DCMP variable
+  for(i in 1:nrow(freeLunch)){  # Determine which students have the DCMP code
+    freeLunch$DCMP[i] = any(freeLunch[i,paste0("PROGRAMELIGIBILITYCODE",1:6)] == "DCMP")
+  } # /for
+  freeAddDCMP = freeLunch[!freeLunch$DCMP,] # Subset to just those who don't have the DCMP code
+  freeAddDCMP = allMatches$Local.ID %in% freeAddDCMP$STUDENTIDSCHOOLDISTRICTSTUDENTID  # Find students with free lunch in powerschool who need the DCMP code
+  if(sum(freeAddDCMP) > 0){
+    print("The following students are set as Free lunch, but need to have DCMP added to their program eligibility codes.")
+    print(allMatches[freeAddDCMP,])
+  } else {
+    print("There are no Free Lunch students in PowerSchool that need to have DCMP added to their program eligibility codes.")
+  } # /if-else
 } else {
-  print("There are no Free Lunch students in PowerSchool that need to have DCMP added to their program eligibility codes.")
-} # /if-else
+  print("There are no Free Lunch records in Powerschool.  None at all.")
+}
 
 
 #-----------------------------------------------#
@@ -176,15 +187,17 @@ if(nrow(forms.new) > 0){
 #-----------------------------#
 
 # This section is useful for the annual Title 1 report that gets submitted through a web form
+# It requires that program services already be loaded in PowerSchool
 
 StudentLiteExtract$EnrolledOnBEDSDay = F
 StudentLiteExtract$EnrolledByBEDSDay = F
-EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE[EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE == ""] = schoolYear("end")
+EnrollExt$SCHOOLEXITDATEENROLLMENTEXITDATE[EnrollExt$SCHOOLEXITDATEENROLLMENTEXITDATE == ""] = as.character(schoolYear("end"))
+
 BEDSday = BedsDate()
 
 for(i in 1:nrow(StudentLiteExtract)){
-  enrollRows = EnrollmentExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID == StudentLiteExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID[i]
-  enrollments = EnrollmentExtract[enrollRows,]
+  enrollRows = EnrollExt$STUDENTIDSCHOOLDISTRICTSTUDENTID == StudentLiteExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID[i]
+  enrollments = EnrollExt[enrollRows,]
   for(j in 1:nrow(enrollments)){
     enrollments$Before[j] = enrollments$SCHOOLENTRYDATEENROLLMENTENTRYDATE[j] <= BEDSday
     enrollments$After[j]  = enrollments$SCHOOLEXITDATEENROLLMENTEXITDATE[j] >= BEDSday
@@ -193,6 +206,7 @@ for(i in 1:nrow(StudentLiteExtract)){
   StudentLiteExtract$EnrolledByBEDSDay[i] = any(enrollments$Before)
   StudentLiteExtract$EnrolledOnBEDSDay[i] = any(enrollments$Both)
 } # /for each student
+
 StudentLiteExtract$Lunch = factor(
   lunch$PROGRAMSCODEPROGRAMSERVICECODE[match(
     StudentLiteExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID, 
@@ -208,7 +222,7 @@ LunchByDistrict = table(usableStudents[,c("Lunch", "DISTRICTCODEOFRESIDENCE")], 
 DistrictCodes = dimnames(LunchByDistrict)$DISTRICTCODEOFRESIDENCE
 DistrictNames = DORs$District.Name[match(DistrictCodes, DORs$District.ID)]
 dimnames(LunchByDistrict)$DISTRICTCODEOFRESIDENCE = DistrictNames
-write.csv(LunchByDistrict, "lunchByDistrict.csv")
+write.csv(LunchByDistrict, paste0(OutFolder,"lunchByDistrict.csv"))
 
 
 #---------------------#
@@ -217,21 +231,27 @@ write.csv(LunchByDistrict, "lunchByDistrict.csv")
 
 # This is useful for completing the IMF
 # It requires that all FRPL records (from both DCMP and lunch forms) be entered in PowerSchool already.
-x = EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE == ""               # which exit dates are missing?
-EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE[x] = as.character(schoolYear("end"))  # set missing exit dates to the end of the year
+x = EnrollExt$SCHOOLEXITDATEENROLLMENTEXITDATE == ""               # which exit dates are missing?
+EnrollExt$SCHOOLEXITDATEENROLLMENTEXITDATE[x] = as.character(schoolYear("end"))  # set missing exit dates to the end of the year
 # convert exit date to date type
-EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE = as.Date(EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE)
+EnrollExt$SCHOOLEXITDATEENROLLMENTEXITDATE = as.Date(EnrollExt$SCHOOLEXITDATEENROLLMENTEXITDATE)
 # convert entry date to date type
-EnrollmentExtract$SCHOOLENTRYDATEENROLLMENTENTRYDATE = as.Date(EnrollmentExtract$SCHOOLENTRYDATEENROLLMENTENTRYDATE) 
+EnrollExt$SCHOOLENTRYDATEENROLLMENTENTRYDATE = as.Date(EnrollExt$SCHOOLENTRYDATEENROLLMENTENTRYDATE) 
 
-y = EnrollmentExtract$SCHOOLENTRYDATEENROLLMENTENTRYDATE < BedsDate()   # which students were around before BEDS day?
-y = y & EnrollmentExtract$SCHOOLEXITDATEENROLLMENTEXITDATE > BedsDate() # which students were around after BEDS day?
-BEDSstudents = EnrollmentExtract$STUDENTIDSCHOOLDISTRICTSTUDENTID[y]    # Get a vector of ID's of students enrolled on BEDS day
+y = EnrollExt$SCHOOLENTRYDATEENROLLMENTENTRYDATE < BedsDate()   # which students were around before BEDS day?
+y = y & EnrollExt$SCHOOLEXITDATEENROLLMENTEXITDATE > BedsDate() # which students were around after BEDS day?
+bedsStudents = EnrollExt$STUDENTIDSCHOOLDISTRICTSTUDENTID[y]    # Get a vector of ID's of students enrolled on BEDS day
 
 # subset lunch services to just students who were enrolled on BEDS day
-bedsLunchServices = lunch[lunch$STUDENTIDSCHOOLDISTRICTSTUDENTID %in% BEDSstudents,] 
+bedsLunchServices = lunch[lunch$STUDENTIDSCHOOLDISTRICTSTUDENTID %in% bedsStudents,] 
 summary(factor(bedsLunchServices$PROGRAMSCODEPROGRAMSERVICECODE))                    # Summarize the results
-length(BEDSstudents) - nrow(bedsLunchServices)
+length(bedsStudents) - nrow(bedsLunchServices)
+
+
+
+
+
+
 
 #------------------------------------------#
 #### Update the Accountability Workbook ####
@@ -311,3 +331,31 @@ for(i in 1:nrow(CafeList)){
 colnames(CafeList) = c("STUDENT.ID", "LAST.NAME", "FIRST.NAME", "GRADE.LEVEL", "DOB", "GENDER", 
                        "Lunch.Status", "Medicaid", "SNAP", "Form", "MedicaidCaseNo", "SnapCaseNo")
 write.csv(CafeList, "list for cafeteria.csv")
+
+
+#---------------------------------------#
+#### SNAP & Medicaid Certified Entry ####
+#---------------------------------------#
+
+oct1 = as.Date(paste0(substr(as.character(BedsDate()), 1, 8), "01"))
+y = EnrollExt$SCHOOLENTRYDATEENROLLMENTENTRYDATE < oct1   # which students were around before october 1?
+septStudents = EnrollExt$STUDENTIDSCHOOLDISTRICTSTUDENTID[y]    # Get a vector of ID's of students enrolled before oct 1
+
+SnapMedCertEntry = data.frame(StudentNumber = as.character(septStudents), stringsAsFactors = F)
+SnapMedCertEntry$SNAP = F
+SnapMedCertEntry$Medicaid = F
+for(i in 1:nrow(SnapMedCertEntry)){
+  if(SnapMedCertEntry$StudentNumber[i] %in% NyssisSnap$Local.ID){
+    SnapMedCertEntry$SNAP[i] = T
+  }
+  if(SnapMedCertEntry$StudentNumber[i] %in% NyssisMedicaid$Local.ID){
+    SnapMedCertEntry$Medicaid[i] = T
+  }
+}
+
+SnapMedCertEntry$Category = "None"
+SnapMedCertEntry$Category[SnapMedCertEntry$Medicaid] = "Medicaid"
+SnapMedCertEntry$Category[SnapMedCertEntry$SNAP] = "SNAP"
+
+summary(factor(SnapMedCertEntry$Category))
+
