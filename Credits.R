@@ -21,9 +21,12 @@ for(i in 1:nrow(Workbook)){
 }
 
 
-for(i in 2011:2016){
-  writeableset = Workbook[Workbook$`Cohort.Year.(year.1st.entered.9th)` == i,c("Local.ID.(optional)", "Last.Name", "First.Name", "pasteCredits", "pasteGradeLevels")]
-  write.csv(x = writeableset, file = paste0(i,"_credits.csv"))
+for(i in 2011:2017){
+  writeableset = Workbook[Workbook$`Cohort.Year.(year.1st.entered.9th)` == i,c("Local.ID.(optional)", "Last.Name", "First.Name", "pasteGradeLevels", "pasteCredits")]
+  if(99 %in% writeableset$pasteGradeLevels){
+    stop("ERROR!  A student is showing up with a grade level of 99.")
+  }
+  write.csv(x = writeableset, file = paste0(OutFolder,i,"_credits.csv"))
 }
 
 
