@@ -1,7 +1,7 @@
 # MainScript.R
 # This script must be run before any other script is run
 
-
+gc()
 
 #-----------------------------------------#
 #### Load libraries and file locations ####
@@ -15,12 +15,13 @@ source("functions.R")
 #-------------------------------#
 # Get the most up to date stuff from the actual workbook
 # Note: you must have access to the data drive on the school network
+# This gets used in a bunch of places, including Students.R
 Workbookraw.xlsx = read.xlsx(
   xlsxFile = AcctWkBkLocation,
-  sheet = "All info in 1 sheet",startRow = 2)
-Workbook = Workbookraw.xlsx[!is.na(Workbookraw.xlsx$`Local.ID.(optional)`),-c(1,2,3)]
-#Format the date variables
-dateVars = c("Date.First.Enrolled.at.GTH", "Date.left.GTH", "Date.1st.Enrolled.in.9th.Grade.(anywhere)","Date.of.Confirmation")
+  sheet = "Data",startRow = 2)
+Workbook = Workbookraw.xlsx[!is.na(Workbookraw.xlsx$`Local.ID.(optional)`),]
+# Format the date variables
+dateVars = c("Date.First.Enrolled.at.GTH", "Date.left.GTH", "Date.1st.Enrolled.in.9th.Grade.(anywhere)","Date.of.Confirmation", "DOB")
 for(i in dateVars){  Workbook[,i] = xlDate(Workbook[,i]) }
 
 
@@ -31,8 +32,9 @@ for(i in dateVars){  Workbook[,i] = xlDate(Workbook[,i]) }
 # Read in student data from powerschool
 # Note: update the data in PowerSchoolAll.xlsx before loading it
 # There is a tab in the file that shows what fields to export
+# This gets used in a bunch of places, such as Students.R
 powerschoolraw = read.xlsx(xlsxFile = PSLocation, sheet = "Student Table")
-#Format the date variables
+# Format the date variables
 dateVars = c("DistrictEntryDate", "EntryDate", "ExitDate")
 for(i in dateVars){ 
   dates = powerschoolraw[,i]
@@ -50,7 +52,7 @@ for(i in dateVars){
 #-----------------------------#
 # Export all F2 grades from the storedgrades table in PowerSchool
 # Note: The export will take a really long time
-# This gets used by Credits.R, FromBio.R, and MathCourseAssignments.R
+# This gets used by Credits.R, FromBio.R, MathCourseAssignments.R, MathRegents.T
 F2 = read.xlsx(xlsxFile = PSLocation, sheet = "F2 Grades")
 F2 = F2[F2$`[1]Student_Number` != 0,]
 F2$DateStored = xlDate(F2$DateStored)
@@ -75,9 +77,10 @@ currentGrades$DateStored = xlDate(currentGrades$DateStored)
 #### Course-Subject Alignments ####
 #---------------------------------#
 # Sign in to google
+# This gets used by MathRegents.R (among others)
 SWSM(gs_auth()) #this may launch a browser so you can sign into your account
 # Get the course-subject alignments
-CourseSubject = SWSM(gs_url(CourseSubjectAddress))
+CourseSubject = SWSM(gs_url(x = CourseSubjectAddress, lookup = F, visibility = "private"))
 alignment = SWSM(gs_read(ss = CourseSubject, ws = 1, verbose = F))
 alignment2 = SWSM(gs_read(ss = CourseSubject, ws = 2, verbose = F))
 alignment$Course[alignment$Course == "AP Global History I"][1] = "AP Global History I "
@@ -118,10 +121,36 @@ templates = loadWorkbook(TemplateLocation)
 
 
 
+#------------------------#
+#### SATs, PSATs, etc ####
+#------------------------#
+# Load SAT data
+SAT.raw = read.xlsx(xlsxFile = CollegeBoardLocation, 
+                    sheet = "SAT",
+                    startRow = 1,
+                    na.strings = c(""))
+
+# Load PSAT data
+PSAT.raw = read.xlsx(xlsxFile = CollegeBoardLocation, sheet = "PSAT", na.strings = c(""))
+
+# Load CLEP data
+CLEP.raw = read.xlsx(xlsxFile = CollegeBoardLocation, sheet = "CLEP", na.strings = c(""))
+CLEP.raw$Test.Date = xlDate(CLEP.raw$Test.Date)
+
+# Load AP data
+AP.raw = read.xlsx(xlsxFile = CollegeBoardLocation, sheet = "AP", na.strings = c(""))
+AP.raw$Test.Date = xlDate(AP.raw$Test.Date)
+
+# Load ACT data
+# ACT.raw = read.xlsx(xlsxFile = CollegeBoardLocation, sheet = "ACT")
+
+
+
 #-----------------#
 #### DOR Table ####
 #-----------------#
 # Load the table of Districts of Residence.  These are typed up, not exported from anywhere.
+# This gets used in Students.R and LunchStatus.R
 DORs = read.xlsx(xlsxFile = PSLocation, sheet = "DOR")
 
 
@@ -133,23 +162,6 @@ DORs = read.xlsx(xlsxFile = PSLocation, sheet = "DOR")
 #------------------------#
 # Load the table of exam names.  These are typed up, not exported from anywhere.
 testLookup = read.xlsx(xlsxFile = PSLocation, sheet = "Test Names")
-
-
-
-#------------------------#
-#### SATs, PSATs, etc ####
-#------------------------#
-# Load SAT data
-SAT.raw = read.xlsx(xlsxFile = CollegeBoardLocation, sheet = "SAT")
-
-# Load PSAT data
-PSAT.raw = read.xlsx(xlsxFile = CollegeBoardLocation, sheet = "PSAT", na.strings = c(""))
-
-# Load AP data
-AP.raw = read.xlsx(xlsxFile = CollegeBoardLocation, sheet = "AP")
-
-# Load ACT data
-ACT.raw = read.xlsx(xlsxFile = CollegeBoardLocation, sheet = "ACT")
 
 
 
