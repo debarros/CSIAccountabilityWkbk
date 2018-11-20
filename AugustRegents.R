@@ -1,12 +1,12 @@
 # AugustRegents.R
 # This takes csv exports from ASAP and creates an ASSESSMENT FACT export to be uploaded to Level 0
 
-#Read the column names from the eScholar template file and remove special characters from them
+# Read the column names from the eScholar template file and remove special characters from them
 AssessmentColumns = GetNiceColumnNames("ASSESSMENT FACT", templates)
 
 # Export csv's of the Rank List by Building from ASAP and put them (and nothing else) in a folder
-#The following section reads in the files and them combines them into a single data.frame
-filelist = list.files(path = "\\\\stuthin2/data/2017-2018/Level 0/Assessment Fact/exports", full.names = T)
+# The following section reads in the files and them combines them into a single data.frame
+filelist = list.files(path = "\\\\stuthin2/data/2018-2019/Level 0/Assessment Fact/exports", full.names = T)
 scores = vector(mode = "list", length = length(filelist))
 for(i in 1:length(filelist)){
   x = read.csv(filelist[i], stringsAsFactors = F)
@@ -15,15 +15,15 @@ for(i in 1:length(filelist)){
 scores = rbindlist(scores)
 
 
-#Set up the output
+# Set up the output
 output = matrix(data = NA_character_, nrow = nrow(scores), ncol = length(AssessmentColumns))
 output = as.data.frame(output, stringsAsFactors = F)
 colnames(output) = AssessmentColumns
 
-#Load the static data into the output
+# Load the static data into the output
 output$DISTRICTCODEDISTRICTOFRESPONSIBILITYCODE = "80059776"
 output$TESTDESCRIPTIONTESTGROUP = "Regents"
-output$ASSESSMENTSCHOOLYEARDATEVERSION = "2018-06-30" # June 30th of the school year
+output$ASSESSMENTSCHOOLYEARDATEVERSION = schoolYear(x = "end") # June 30th of the school year
 output$TESTINGLOCATIONCODE = "1"
 output$ASSESSMENTLANGUAGECODE = "ENG"
 
@@ -56,8 +56,9 @@ for(i in 1:nrow(output)){
   
 }
 
-for(i in 1:ncol(output)){
-  output[,i] = na.to.empty(output[,i])
-}
 
-write.table(output, file = "AugustRegents.csv", row.names = F, col.names = F, sep = ",", dec = ".") 
+
+output = DFna.to.empty(output)
+
+
+write.table(output, file = paste0(OutFolder, "AugustRegents.csv"), row.names = F, col.names = F, sep = ",", dec = ".") 
