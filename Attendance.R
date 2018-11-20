@@ -34,24 +34,29 @@ write.csv(x = today.mtg, file = paste0(OutFolder, "absences.csv"))
 #### Find attendance records after student exited ####
 #----------------------------------------------------#
 thisYear = attendance
-thisYear$exitDate = powerschool$ExitDate[match(thisYear$`[1]Student_Number`, powerschool$student_number)]      # Add the date the student exited the school
-thisYear.bad = thisYear[thisYear$Att_Date > thisYear$exitDate,]                                                # Limit to attendance records dated after exit
+thisYear$exitDate = powerschool$ExitDate[match(
+  thisYear$`[1]Student_Number`, powerschool$student_number)]          # Add the date the student exited the school
+thisYear.bad = thisYear[thisYear$Att_Date > thisYear$exitDate,]       # Limit to attendance records dated after exit
 if(nrow(thisYear.bad) > 0){
-  thisYear.bad = thisYear.bad[,c("[1]LastFirst", "[1]Student_Number", "Att_Date", "exitDate", "CCID", "ID")]   # Remove unnecessary columns
-  thisYear.bad$SectionEntry = cc$DateEnrolled[match(thisYear.bad$CCID, cc$ID)]                                 # Add the date the student entered the section
-  thisYear.bad$SectionExit = cc$DateLeft[match(thisYear.bad$CCID, cc$ID)]                                      # Add the date the student exited the section
-  thisYear.bad$StudentID = powerschool$ID[match(thisYear.bad$`[1]Student_Number`, powerschool$student_number)] # Add the internal powerschool ID for the student
-  thisYear.bad$Action = ""                                                                                     # Initialize the Action field
+  # Remove unnecessary columns
+  cols2use = c("[1]LastFirst", "[1]Student_Number", "Att_Date", "exitDate", "CCID", "ID")
+  thisYear.bad = thisYear.bad[,cols2use]   
+  thisYear.bad$SectionEntry = cc$DateEnrolled[match(thisYear.bad$CCID, cc$ID)]             # Add the date the student entered the section
+  thisYear.bad$SectionExit = cc$DateLeft[match(thisYear.bad$CCID, cc$ID)]                  # Add the date the student exited the section
+  # Add the internal powerschool ID for the student
+  thisYear.bad$StudentID = powerschool$ID[match(
+    thisYear.bad$`[1]Student_Number`, powerschool$student_number)] 
+  thisYear.bad$Action = ""                                                                 # Initialize the Action field
   for(i in 1:nrow(thisYear.bad)){
-    act = "Delete Attendance.  "                                                                               # Mark the attendance record for deletion
-    if(thisYear.bad$SectionEntry[i] > thisYear.bad$exitDate[i]){                                               # If student entered section after leaving school,
-      act = paste0(act, "Delete from cc table.  ")                                                             # Mark the section enrollment record for deletion
+    act = "Delete Attendance.  "                                                           # Mark the attendance record for deletion
+    if(thisYear.bad$SectionEntry[i] > thisYear.bad$exitDate[i]){                           # If student entered section after leaving school,
+      act = paste0(act, "Delete from cc table.  ")                                         # Mark the section enrollment record for deletion
     } else {
-      if(cc$TermID[cc$ID == thisYear.bad$CCID[i]] > 0){                                                        # If the section enrollment is active
-        act = paste0(act, "Exit the student from the section.  ")                                              # Mark that it should be exited
+      if(cc$TermID[cc$ID == thisYear.bad$CCID[i]] > 0){                                    # If the section enrollment is active
+        act = paste0(act, "Exit the student from the section.  ")                          # Mark that it should be exited
       } else {
-        if(thisYear.bad$SectionExit[i] > thisYear.bad$exitDate[i]){                                            # If the section enrollment ends after the student left,
-          act = paste0(act, "Change the section exit date.  ")                                                 # mark that the section exit date should be changed
+        if(thisYear.bad$SectionExit[i] > thisYear.bad$exitDate[i]){                        # If section enrollment ends after the student left,
+          act = paste0(act, "Change the section exit date.  ")                             # mark that the section exit date should be changed
         } # /if
       } # /if-else
     } # /if-else section enrollment began after the student transfered out of GTH
@@ -81,7 +86,9 @@ attendance$code = attendCodes$Att_Code[match(attendance$Attendance_CodeID, atten
 
 # Get lists of attendance descriptions/statuses
 statuses = unique(attendCodes$Description)
-absentcodes = intersect(statuses, c("Absence Unexcused", "Absence Excused", "Suspension", "Expelled", "Night School Absent", "ISS Absent unexcused", "ISS Absent Excused", "Night School Absent Excused"))
+absentcodes = intersect(statuses, 
+                        c("Absence Unexcused", "Absence Excused", "Suspension", "Expelled", "Night School Absent", 
+                          "ISS Absent unexcused", "ISS Absent Excused", "Night School Absent Excused"))
 AUcodes = intersect(statuses, c("Absence Unexcused", "Night School Absent", "ISS Absent unexcused"))
 powerschool[,statuses] = 0 # Add columns for the various statuses
 
@@ -98,10 +105,10 @@ powerschool$totalAU = apply(powerschool[,AUcodes], 1, sum)           # add a col
 
 # Calculate the attendance risk
 powerschool$attendanceRisk = 
-  10 * (powerschool$`Absence Unexcused` + powerschool$`ISS Absent unexcused` + powerschool$`Night School Absent`) +    # 10 pts per unexcused absence
-  5 * powerschool$`Tardy Unexcused` +                                                                                  #  5 pts per unexcused tardy
-  4 * (powerschool$`Absence Excused` + powerschool$`ISS Absent Excused` + powerschool$`Night School Absent Excused`) + #  4 pts per excused absence
-  1 * (powerschool$`ISS Tardy Excused` + powerschool$`Tardy Excused`)                                                  #  1 pt  per excused tardy
+  10 * (powerschool$`Absence Unexcused` + powerschool$`ISS Absent unexcused` + powerschool$`Night School Absent`) +    # 10 pts per AU
+  5 * powerschool$`Tardy Unexcused` +                                                                                  #  5 pts per TU
+  4 * (powerschool$`Absence Excused` + powerschool$`ISS Absent Excused` + powerschool$`Night School Absent Excused`) + #  4 pts per AE
+  1 * (powerschool$`ISS Tardy Excused` + powerschool$`Tardy Excused`)                                                  #  1 pt  per TE
 
 # Take a look at the summarized data
 hist(powerschool$attendanceRisk)
@@ -127,7 +134,9 @@ powerschool$attendanceRiskLabel[powerschool$attendanceRiskCategory > 1] = "High"
 
 # Generate output.  Include students whose risk z score is above 0.5
 # It would be nice to output this as an excel workbook with some formatting
-attRiskOutput = powerschool[powerschool$attendanceRiskz > 0.5, c("student_number", "lastfirst", "grade_level", "totalAbsences", "totalAU", "attendanceRiskCategory")]
+attRiskOutput = powerschool[
+  powerschool$attendanceRiskz > 0.5, 
+  c("student_number", "lastfirst", "grade_level", "totalAbsences", "totalAU", "attendanceRiskCategory")]
 attRiskOutput = attRiskOutput[order(attRiskOutput$attendanceRiskCategory, attRiskOutput$totalAbsences, decreasing = T),]
 sum(attRiskOutput$attendanceRiskCategory > 0)
 write.csv(x = attRiskOutput, file = paste0(OutFolder, "attendanceRisk.csv"))
@@ -151,12 +160,12 @@ att.mtg$CourseName = cc$`[02]course_name`[match(att.mtg$CCID, cc$ID)] # for meet
 
 sum(is.na(cc$`[02]course_name`)) # should be 0
 
-badenr = setdiff(att.mtg$CCID, cc$ID) # enrollments for which there is attendance but nothing in the cc table
+badenr = setdiff(att.mtg$CCID, cc$ID)           # enrollments for which there is attendance but nothing in the cc table
 
 att.badenr = att.mtg[att.mtg$CCID %in% badenr,] # get all the mtg attendance for enrollments that have nothing in the cc table
-unique(att.badenr$`[1]LastFirst`) # check these students to see if they actually attended gth
-unique(att.badenr$StudentID) # if they didn't, find the attendance records with these student IDs and delete them
-att.badenr$ID  # this is the ID for all the mtg attendance records that have no associate course
+unique(att.badenr$`[1]LastFirst`)               # check these students to see if they actually attended gth
+unique(att.badenr$StudentID)                    # if they didn't, find the attendance records with these student IDs and delete them
+att.badenr$ID                                   # this is the ID for all the mtg attendance records that have no associate course
 
 
 
@@ -168,7 +177,9 @@ cc = cc.raw
 sum(is.na(attendance$CCID)) # should be 0
 
 statuses = unique(attendCodes$Description)
-absentcodes = intersect(statuses, c("Absence Unexcused", "Absence Excused", "Suspension", "Expelled", "Night School Absent", "ISS Absent unexcused", "ISS Absent Excused", "Night School Absent Excused"))
+absentcodes = intersect(statuses, 
+                        c("Absence Unexcused", "Absence Excused", "Suspension", "Expelled", "Night School Absent", 
+                          "ISS Absent unexcused", "ISS Absent Excused", "Night School Absent Excused"))
 AUcodes = intersect(statuses, c("Absence Unexcused", "Night School Absent", "ISS Absent unexcused"))
 presentcodes = c("Present", "Present ISS", "Night School Present")
 
@@ -179,10 +190,10 @@ attendance$StudDate = paste0(attendance$`[1]Student_Number`, " - " ,attendance$A
 att.mtg = attendance[attendance$CCID != 0,]
 att.day = attendance[attendance$CCID == 0,]
 
-att.mtg$CourseName = cc$`[02]course_name`[match(att.mtg$CCID, cc$ID)] # for meeting attendance, get the course name
-att.mtg$Teacher = cc$`[05]lastfirst`[match(att.mtg$CCID, cc$ID)] # for meeting attendance, get the course name
+att.mtg$CourseName = cc$`[02]course_name`[match(att.mtg$CCID, cc$ID)]              # for meeting attendance, get the course name
+att.mtg$Teacher = cc$`[05]lastfirst`[match(att.mtg$CCID, cc$ID)]                   # for meeting attendance, get the course name
 att.mtg$period = periodCodes$Abbreviation[match(att.mtg$PeriodID, periodCodes$ID)]
-sum(is.na(cc$`[02]course_name`)) # should be 0
+sum(is.na(cc$`[02]course_name`))                                                   # should be 0
 att.mtg = att.mtg[att.mtg$CourseName != "Lunch",]
 
 students = unique(attendance$`[1]Student_Number`)
@@ -199,6 +210,9 @@ for(i in 1:nrow(att.day.pres)){
 
 table(att.day.pres[,c("mtgPres", "mtgAbs")])
 
+
+# The following line shows all of the situations where a student was marked present for the day,
+# has no periods where is was marked present, and has at least one period where he was marked absent
 att.day.pres[att.day.pres$mtgPres == 0 & att.day.pres$mtgAbs > 0, c("StudDate", "[1]LastFirst")]
 
 
@@ -243,3 +257,20 @@ table(att.mtg.prob[,c("Teacher", "period")])
 
 
 write.csv(att.day.abs.prob, paste0(OutFolder, "Attendance issues.csv"))
+
+
+#-----------------------------------------#
+#### List students out on a given date ####
+#-----------------------------------------#
+
+att.oneday = read.xlsx(xlsxFile = PSLocation, sheet = "OneDayAttendance")
+
+att.oneday$Att_Date = xlDate(att.oneday$Att_Date)
+
+att.oneday = att.oneday[att.oneday$Att_Date == as.Date("2018-10-17"),] # enter the desired date
+att.oneday = att.oneday[att.oneday$Att_Mode_Code == "ATT_ModeDaily",]
+
+
+att.oneday$Att_Code = attendCodes$Att_Code[match(att.oneday$Attendance_CodeID, attendCodes$ID)]
+
+att.oneday[,c("[1]LastFirst", "[1]Student_Number", "Att_Date", "Att_Code")]
