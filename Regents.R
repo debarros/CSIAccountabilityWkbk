@@ -12,11 +12,14 @@ PowerSchool = powerschoolraw
 #### Set the exams and categories ####
 #------------------------------------#
 
+
 # if new exams have been introduced, you'll need to add them here
-Exams = c("ELAOld","AlgOld","GeomOld","Trig","Bio","Earth","Chem","Phys","US","Global","ELACC","AlgCC","GeomCC", "Alg2CC")
+# Even better, this should be updated in the test name tab of PowerSchoolAll.xlsx
+Exams = c("ELAOld","AlgOld","GeomOld","Trig","Bio","Earth","Chem","Phys","US","Global","ELACC","AlgCC","GeomCC", "Alg2CC", "GlobTrans")
 nExam = length(Exams)
 Categories = c("Alg","Geom","Trig","Bio","Earth","Chem","Phys","US","Global","ELA")
 nCat = length(Categories)
+
 
 
 #---------------------------------------------------------#
@@ -29,8 +32,9 @@ column_names = expand.grid(c("Scaled.Score", "Performance.Level", "Exam.Year.and
                            c("English", "Algebra", "Geometry", "Trig", "Bio", 
                              "Earth.Science", "Chemistry", "Physics", "US.History", 
                              "Global", "Common.Core.ELA", "Common.Core.Algebra", 
-                             "Common.Core.Geometry", "Common.Core.Algebra.2"))
+                             "Common.Core.Geometry", "Common.Core.Algebra.2", "Global.Transition"))
 column_names = c("Local.ID.(optional)", apply(column_names[,c(2,1)], 1, paste0, collapse = ""))
+
 Workbook.sub = Workbook.sub[,column_names]  # subset the workbook to the relevant columns
 names(Workbook.sub)[1] = "ID"               # change the first column to be named ID
 studentlist = as.double(Workbook.sub[,1])   # this needs to be a double precision because some ID's are very long
@@ -140,12 +144,34 @@ if(sum(!MbetterComp(CompareMatrix, wkbkMatrix) & !is.na(CompareMatrix)) > 0){
 #### Make category score matrix from the CompareMatrix ####
 #---------------------------------------------------------#
 
+Exam2CatTable = data.frame(
+  matrix(data = c("AlgOld",    "Alg",
+                  "AlgCC",     "Alg",
+                  "GeomOld",   "Geom",
+                  "GeomCC",    "Geom",
+                  "ELAOld",    "ELA",
+                  "ELACC",     "ELA",
+                  "Trig",      "Trig",
+                  "Alg2CC",    "Trig",
+                  "Bio",       "Bio",
+                  "Earth",     "Earth",
+                  "Phys",      "Phys",
+                  "US",        "US",
+                  "Chem",      "Chem",
+                  "Global",    "Global",
+                  "GlobTrans", "Global"), 
+         ncol = 2, byrow = T),
+  stringsAsFactors = F)
+colnames(Exam2CatTable) = c("Exam", "Category")
+
 Alg = VbetterMax(CompareMatrix[,"AlgOld"], CompareMatrix[,"AlgCC"])    # get the best scores across the two algebra exams
 Geom = VbetterMax(CompareMatrix[,"GeomOld"], CompareMatrix[,"GeomCC"]) # get the best scores across the two geometry exams
 ELA = VbetterMax(CompareMatrix[,"ELAOld"], CompareMatrix[,"ELACC"])    # get the best scores across the two ELA exams
 Trig = VbetterMax(CompareMatrix[,"Trig"], CompareMatrix[,"Alg2CC"])    # get the best scores across the two Alg2 exams
-CatBest = cbind(Alg, Geom, Trig, CompareMatrix[,5:10], ELA)            # make a matrix of the best scores by category
+Global = VbetterMax(CompareMatrix[,"Global"], CompareMatrix[,"GlobTrans"])    # get the best scores across the two Alg2 exams
+CatBest = cbind(Alg, Geom, Trig, CompareMatrix[,5:9], Global, ELA)            # make a matrix of the best scores by category
 # Note: It would be better if the prior line used column names instead of numbers, but that doesn't seem to work with matrices
+
 
 
 #-------------------------------#
@@ -188,15 +214,20 @@ if(sum(!MbetterComp(CatCompareMatrix, psMatrix) & !is.na(CatCompareMatrix))){   
   badPS$Last = Workbook$Last.Name[match(badPS$ID,Workbook$`Local.ID.(optional)`)]   # pull in the last name
   badPS$Session = ""                                                                # create a column to hold the test session name
   
+  
+  # This loop is supposed to add in test sessions
   for (i in 1:nrow(badPS)){
-    thisrow = which(studentlist == badPS$ID[i])
-    thiscolumn = which(substr(colnames(dbMatrix), 1,  nchar(badPS$Categories[i])) == badPS$Categories[i])
-    if(length(thiscolumn) == 1){
-      badPS$Session[i] = dbSessions[thisrow, thiscolumn]
-    } else {
-      score = badPS$dbScore[i]
-      usethisone = which(dbMatrix[thisrow,thiscolumn] == score)[1]
-      badPS$Session[i] = dbSessions[thisrow,thiscolumn[usethisone]]
+    thisrow = which(studentlist == badPS$ID[i])                                 # Determine this student's row of the dbMatrix
+    examset = Exam2CatTable$Exam[Exam2CatTable$Category == badPS$Categories[i]] # Determine the exam(s) relevant to thiscategory
+    thiscolumn = which(colnames(dbMatrix) %in% examset)                         # Determine the column(s) relevant to this exam
+      
+    if(length(thiscolumn) == 1){                                                # If the category has only one exam, 
+      badPS$Session[i] = dbSessions[thisrow, thiscolumn]                        # grab that session.
+    } else {                                                                    # If the category has multiple exams,
+      score = badPS$dbScore[i]                                                  # grab the score.
+      usethisone = which(dbMatrix[thisrow,thiscolumn] == score)                 # Grab the column(s) with that score for that student
+      usethisone = usethisone[1]                                                # If score appears more than once, use first one
+      badPS$Session[i] = dbSessions[thisrow,thiscolumn[usethisone]]             # Grab the session
     } # /if-else
   } # /for loop
   
@@ -246,7 +277,14 @@ if(sum(temp) > 0){                                   # if there are any best sco
   print("No mysterious PowerSchool scores found")
 }
 
-# Create a subset of the score database that refers to only those students who have score mismatches
+
+
+#----------------------------------------------------------------------------------------------------------#
+#### Create a subset of the score database that refers to only those students who have score mismatches ####
+#----------------------------------------------------------------------------------------------------------#
+
+# Note: this part is usually unnecessary and generally unhelpful
+
 if(exists("badWork") + exists("badPS") == 2){
   studentsToUse = unique(c(badWork$ID, badPS$ID))
 } else if(exists("badWork")){
@@ -264,6 +302,7 @@ if(!all(is.na(studentsToUse))){
   vars = names(badStudents)
   x = length(vars)
   badStudents = badStudents[,c(vars[x-1], vars[x], vars[1:(x-2)])]
+  badStudents = DFna.to.empty(badStudents)
   write.csv(badStudents, file = paste0(OutFolder,"ScoresAndSessionsForStudentsWithScoreIssues.csv")) # export the file
   print("Look at the composite file for students with score issues")
 } else {
