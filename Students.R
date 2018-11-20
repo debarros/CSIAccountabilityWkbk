@@ -36,7 +36,7 @@ if(nrow(CohortIssues) > 0){
   print("There are cohort issues to resolve.  Check the file.")
   write.csv(CohortIssues, paste0(OutFolder,"Missing Transfer Info.csv"))
 } else {
-  print("There are no unenrolled students in any graduation cohort.  Yay!")
+  print("There are no inactive students in any graduation cohort.  Yay!")
 }
 
 
@@ -65,7 +65,7 @@ if(nrow(offtrack) > 0){
 #### Identify Seniors not in the Current Grad Cohort ####
 #-------------------------------------------------------#
 
-Seniors = Workbook.InCohort[VbetterComp(Workbook.InCohort$`Grade.(leave.blank.if.no.longer.enrolled)`, 12),]
+Seniors = Workbook.InCohort[VbetterComp(Workbook.InCohort$`Grade.(leave.blank.if.no.longer.enrolled)`, 12) & toupper(Workbook.InCohort$`Still.Enrolled?`) == "YES",]
 Seniors.other = Seniors[Seniors$`Cohort.Year.(year.1st.entered.9th)` != schoolYear() - 3,]
 if(nrow(Seniors.other) > 0 ){
   Seniors.other = Seniors.other[,c("Local.ID.(optional)", "Last.Name", "First.Name", "Cohort.Year.(year.1st.entered.9th)")]
@@ -85,7 +85,7 @@ if(nrow(Seniors.other) > 0 ){
 gradCohort = Workbook.InCohort[Workbook.InCohort$`Cohort.Year.(year.1st.entered.9th)` == schoolYear() - 3,]
 gradCohort$Status = ""
 gradCohort$Status[!(VbetterComp(gradCohort$`Grade.(leave.blank.if.no.longer.enrolled)`, 12))]   = "Off Track"
-gradCohort$Status[is.na(gradCohort$`Grade.(leave.blank.if.no.longer.enrolled)`)]   = "Not Enrolled"
+gradCohort$Status[toupper(gradCohort$`Still.Enrolled?`) == "NO"]   = "Not Enrolled"
 gradCohort$Status[VbetterComp(toupper(gradCohort$Discharge.Reason), "GRADUATED")]   = "Graduated"
 gradCohort2 = gradCohort[,c("Local.ID.(optional)", "Last.Name", "First.Name", "Status")]
 colnames(gradCohort2) = c("Student ID", "Last", "First", "Status")
