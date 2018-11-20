@@ -1,8 +1,8 @@
 #Make pretty master schedules
 
 # In PowerSchool, get the master schedule in list view
-# Copy the table and paste it into the first sheet in masterSched.xlsx
-d1 = read.xlsx("masterSched.xlsx")
+# Copy the table and paste it into the MasterSchedule tab in PowerSchoolAll.xslx
+d1 = read.xlsx(xlsxFile = PSLocation, sheet = "MasterSchedule")
 d1$Teacher.Name = trimws(d1$Teacher.Name)
 for(i in 1:nrow(d1)){
   space_position  = gregexpr(pattern = " ", text = d1$Teacher.Name[i])
@@ -13,12 +13,25 @@ for(i in 1:nrow(d1)){
 d1$Course.Name = trimws(d1$Course.Name)
 d1$Course.short = FullAlignment$ShortName[match(d1$Course.Name, FullAlignment$Course)]
 
+d1 = d1[d1$Course.Name != "Independent Study",]
+
 # Look for missing info
 d1[is.na(d1$Room),]
 d1[is.na(d1$Teacher.Name),]
 d1[is.na(d1$Course.Name),]
 d1[is.na(d1$Course.short),]
 d1[is.na(d1$Expression),]
+
+
+# Fix long room names
+d1$Room[d1$Room == "ART ROOM "] = "Art"
+d1$Room[d1$Room == "CHAPEL "] = "Chapel"
+d1$Room[d1$Room == "GYM "] = "Gym"
+d1$Room[d1$Room == "CAFE "] = "Cafe"
+d1$Room[d1$Room == "209B "] = "209B"
+d1$Room[d1$Room == "209A "] = "209A"
+d1$Room[d1$Room == "209C "] = "209C"
+unique(d1$Room)
 
 # Created the period column
 d1$period = gsub(pattern = "[^[:digit:]]", replacement = "", x = d1$Expression)
@@ -58,16 +71,19 @@ d2 = melt(d1[,c("Teacher.Name","period","entry")])
 output = dcast(data = d2, formula = Teacher.Name ~ period, value.var = "entry")
 output = output[,c("Teacher.Name", "A", as.character(1:8))]
 output[is.na(output)] = ""
-write.csv(x = output, file = "mastersched.csv")
+write.csv(x = output, file = paste0(OutFolder,"mastersched.csv"))
+
+
 
 
 # Look for overloaded rooms
 d3 = d1
+d3$teacher.short = substr(x = d3$Teacher.Name, start = 1, stop = (nchar(d3$Teacher.Name) - 3))
 d3 = d3[d3$Course.short != "Lunch",]
 row.names(d3) = NULL
 d3$Room.Per = paste0(d3$Room, " - ", d3$period)
 doops2 = d3[duplicated(d3$Room.Per),]
-write.csv(x = d3[d3$Room.Per %in% doops2$Room.Per,], file = "overloaded_rooms.csv")
+write.csv(x = d3[d3$Room.Per %in% doops2$Room.Per,], file = paste0(OutFolder,"overloaded_rooms.csv"))
 
 # Find situations where two classes occur in the same room during the same period and merge them
 d3 = d3[!duplicated(d3$Room.Per),]
@@ -75,7 +91,7 @@ rownames(d3) = NULL
 rownames(doops2) = NULL
 for(i in 1:nrow(doops2)){
   cur.row = which(d3$Room.Per == doops2$Room.Per[i])
-  teachers = paste0(unique(c(d3$Teacher.Name[cur.row],doops2$Teacher.Name[i])), collapse = " / ")
+  teachers = paste0(unique(c(d3$teacher.short[cur.row],doops2$teacher.short[i])), collapse = "/")
   d3$Teacher.Name[cur.row] = teachers
 }
 
@@ -84,7 +100,7 @@ for(i in 1:nrow(doops2)){
 output2 = dcast(data = d3, formula = Room ~ period, value.var = "Teacher.Name")
 output2 = output2[,c("Room", "A", as.character(1:8))]
 output2[is.na(output2)] = ""
-write.csv(x = output2, file = "mastersched2.csv")
+write.csv(x = output2, file = paste0(OutFolder,"mastersched2.csv"))
 
 
 
