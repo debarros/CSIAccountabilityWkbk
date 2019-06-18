@@ -136,8 +136,8 @@ if(sum(!MbetterComp(CompareMatrix, wkbkMatrix) & !is.na(CompareMatrix)) > 0){
   print("Workbook is fine")
 }
 #Note:
-#     The output has to be pasted one cohort at a time
-#     You will have to refill the formulas for the performance levels, but there is a macro for that.
+#     You can paste the scores and dates one column at a time, but that takes a while.
+#     You could paste the whole thing, but then you'd have to fix all of the performance level formulas.
 
 
 #---------------------------------------------------------#
