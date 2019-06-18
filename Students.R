@@ -13,12 +13,12 @@
 
 #This part finds discrepancies between PowerSchool and the Accountability Workbook in terms of which students are current
 
-psStudents = powerschoolraw                                                                   # Make a copy of the original data
-psStudents$DOR = DORs$District.Name[match(psStudents$DistrictOfResidence, DORs$District.ID)]  # Get the DOR name
-inconsistencies = FindInconsistentActiveStatus(psStudents, Workbook)                          # Identify inconsistencies
-if(is.data.frame(inconsistencies)){                                                           # If there are any,
-  write.csv(inconsistencies, paste0(OutFolder,"active and inactive inconsistencies.csv"))     # Output the results
-  print("There were inconsistencies between the workbook and PowerSchool.  Check the file.")  # Notify the user
+psStudents = powerschoolraw                                                                     # Make a copy of the original data
+psStudents$DOR = DORs$District.Name[match(psStudents$DistrictOfResidence, DORs$District.ID)]    # Get the DOR name
+inconsistencies = FindInconsistentActiveStatus(psStudentsRaw = psStudents, Workbook = Workbook) # Identify inconsistencies
+if(is.data.frame(inconsistencies)){                                                             # If there are any,
+  write.csv(inconsistencies, paste0(OutFolder,"active and inactive inconsistencies.csv"))       # Output the results
+  print("There were inconsistencies between the workbook and PowerSchool.  Check the file.")    # Notify the user
 } else {
   print("There are no inconsistencies between the workbook and PowerSchool.  Yay!")
 }
