@@ -24,6 +24,7 @@ gradelevels[nchar(gradelevels) == 1] = "09"             # change single-digit gr
 demographics$CURRENTGRADELEVELGRADELEVEL = gradelevels  # put grade levels back in
 
 demographics$GUIDANCECOUNSELORDISTRICTCODE = ""         # remove the guidance counselor codes
+demographics$GUIDANCECOUNSELORID = ""
 
 dips = demographics$DIPLOMATYPECODECREDENTIALTYPECODE   # grab the diploma types
 dips[dips == "68"] = "068"                              # change diploma type code 68 to 068
@@ -46,7 +47,7 @@ if(any(races == "")){                                   # Check for students mis
   
 write.SIRS(demographics, paste0(OutFolder, "demographics.csv"))    # output
 
-
+str(demographics)
 
 #------------------#
 #### Enrollment ####
