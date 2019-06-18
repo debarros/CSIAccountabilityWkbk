@@ -15,7 +15,7 @@ source("functions.R")
 #-------------------------------#
 # Get the most up to date stuff from the actual workbook
 # Note: you must have access to the data drive on the school network
-# This gets used in a bunch of places, including Students.R
+# This gets used in a bunch of places, including Students.R and MeritsAndDemerits_2.R
 Workbookraw.xlsx = read.xlsx(
   xlsxFile = AcctWkBkLocation,
   sheet = "Data",startRow = 2)
@@ -32,7 +32,7 @@ for(i in dateVars){  Workbook[,i] = xlDate(Workbook[,i]) }
 # Read in student data from powerschool
 # Note: update the data in PowerSchoolAll.xlsx before loading it
 # There is a tab in the file that shows what fields to export
-# This gets used in a bunch of places, such as Students.R
+# This gets used in a bunch of places, such as Students.R, Regents.R
 powerschoolraw = read.xlsx(xlsxFile = PSLocation, sheet = "Student Table")
 # Format the date variables
 dateVars = c("DistrictEntryDate", "EntryDate", "ExitDate")
@@ -73,11 +73,24 @@ currentGrades$DateStored = xlDate(currentGrades$DateStored)
 
 
 
+#-----------------------------------#
+#### PowerSchool Unstored Grades ####
+#-----------------------------------#
+# PSCB Custom Reports > Grading > Class - Percent Grades Range
+# Get all records for the current term
+# Click Copy Data button and paste into PowerSchool excel workbook
+unstoredGrades = read.xlsx(xlsxFile = PSLocation, sheet = "Unstored Grades")
+unstoredGrades$Last.Grade.Update = xlDate(unstoredGrades$Last.Grade.Update)
+
+
+
+
+
 #---------------------------------#
 #### Course-Subject Alignments ####
 #---------------------------------#
 # Sign in to google
-# This gets used by MathRegents.R (among others)
+# This gets used by MathRegents.R and masterSchedule.R (among others)
 SWSM(gs_auth()) #this may launch a browser so you can sign into your account
 # Get the course-subject alignments
 CourseSubject = SWSM(gs_url(x = CourseSubjectAddress, lookup = F, visibility = "private"))
@@ -104,6 +117,7 @@ RegentsDBraw = read.csv(RDBLocation, stringsAsFactors = FALSE)
 #### PowerSchool CC Table ####
 #----------------------------#
 # Load the current term's enrollment records (exported from the cc table in powerschool)
+# This gets used by Level0.R (among others)
 cc.raw = read.xlsx(xlsxFile = PSLocation, sheet = "cc")
 dateVars = c("DateEnrolled", "DateLeft")
 for(i in dateVars){  cc.raw[,i] = xlDate(cc.raw[,i]) }
@@ -115,6 +129,7 @@ for(i in dateVars){  cc.raw[,i] = xlDate(cc.raw[,i]) }
 #### SIRS Templates ####
 #----------------------#
 # Load all the templates (data dictionaries) for the SIRS exports
+# This gets used by a bunch of scripts, including LunchStatus.R and Level0.R
 templates = loadWorkbook(TemplateLocation)
 
 
@@ -124,6 +139,8 @@ templates = loadWorkbook(TemplateLocation)
 #------------------------#
 #### SATs, PSATs, etc ####
 #------------------------#
+# This gets used by PSATScores.R
+
 # Load SAT data
 SAT.raw = read.xlsx(xlsxFile = CollegeBoardLocation, 
                     sheet = "SAT",
