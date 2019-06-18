@@ -1,5 +1,18 @@
 # Merits and demerits
 
+
+########################################################################
+####                                                                ####
+####     Do not use this script.  It's based on the old format.     ####  
+####     Use the MeritsAndDemerits_2.R file.                        ####
+####                                                                ####
+########################################################################
+
+
+
+
+
+
 # Generate a table of the URL's of all the demerit spreadsheets ####
 # Hopefully there is a faster way to do this that doesn't involve getting each url one at a time
 
