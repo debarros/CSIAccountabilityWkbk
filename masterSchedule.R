@@ -13,7 +13,14 @@ for(i in 1:nrow(d1)){
 d1$Course.Name = trimws(d1$Course.Name)
 d1$Course.short = FullAlignment$ShortName[match(d1$Course.Name, FullAlignment$Course)]
 
-d1 = d1[d1$Course.Name != "Independent Study",]
+# Remove unnecessary courses
+d1 = d1[!(d1$Course.Name %in% c("Independent Study", "Career Internship")),]
+
+
+# Remove exited or unnecessary teachers
+d1 = d1[!(d1$Teacher.Name %in% c("Aviza, K","Alcinay, S", "Clairmont, L", "Desrochers, B", "Lowe, D", "McFerran, J", "Mitchell, V", "Polk- Ford, M", "Ramirez, J", "Randle, L", "Remington, T", "Troia, J", "Warring, S")),]
+
+unique(d1$Teacher.Name)
 
 # Look for missing info
 d1[is.na(d1$Room),]
@@ -33,9 +40,12 @@ d1$Room[d1$Room == "209A "] = "209A"
 d1$Room[d1$Room == "209C "] = "209C"
 unique(d1$Room)
 
-# Created the period column
-d1$period = gsub(pattern = "[^[:digit:]]", replacement = "", x = d1$Expression)
+# Create the period column
+d1$period = d1$Expression
+d1$period[d1$period == "HR(A) "] = "9"
+d1$period = gsub(pattern = "[^[:digit:]]", replacement = "", x = d1$period)
 d1$period[d1$period == "9"] = "A"
+
 
 # Split courses that last multiple periods into multiple rows
 addons = d1[c(),]
