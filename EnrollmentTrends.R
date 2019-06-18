@@ -24,7 +24,7 @@ eDates = as.Date(c("0001-11-01", "0002-11-01", "0003-11-01", "0004-09-01")) # En
 ThisCohort = format(EOY,"%Y")                                               # Cohort of the newest class
 ThisCohort.int = as.integer(ThisCohort)
 RecentCohorts = paste0("c",c(ThisCohort, as.integer(ThisCohort)-1))         # This and the prior cohort prepended with "c"
-MTHS = 5                                                                    # number of months at the beginning of the year
+MTHS = 3                                                                    # number of months at the beginning of the year
 MTHSdates = as.Date(paste0("000",1:4,"-",MTHS,"-01"))                       # adjusted format dates marking MTHS months into each year
 
 
@@ -54,6 +54,9 @@ for (i in 1:nrow(Enrollment)){
     Enrollment[i,paste0("c",j)] = sum(entry <= Enrollment$dates[i] & exit >= Enrollment$dates[i] & cohort == j)  
   } # /for each cohort
 } # /for each date
+
+# Print the BEDS Day enrollment
+Enrollment[Enrollment$dates == BedsDate(),]
 
 # In order to categorize by school year, create an offset date to move the school year start to the calendar year start
 Enrollment$offsetDate = Enrollment$dates - 181 
