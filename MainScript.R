@@ -79,6 +79,7 @@ currentGrades$DateStored = xlDate(currentGrades$DateStored)
 # PSCB Custom Reports > Grading > Class - Percent Grades Range
 # Get all records for the current term
 # Click Copy Data button and paste into PowerSchool excel workbook
+# This gets used in SummerSchool.R, among others
 unstoredGrades = read.xlsx(xlsxFile = PSLocation, sheet = "Unstored Grades")
 unstoredGrades$Last.Grade.Update = xlDate(unstoredGrades$Last.Grade.Update)
 
