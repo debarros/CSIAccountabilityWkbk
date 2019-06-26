@@ -7,7 +7,7 @@
 # Enter the url of the sheet
 thisURL = "https://docs.google.com/spreadsheets/d/1HyuQh5_1ZpQzrM8VkgtZ2dVekU3Qp5WqpC9WNPNvdGU/edit?usp=sharing"  
 
-tabs2ignore = c("411", "418","52","59")                                                        # should any tabs be ignored for now?
+tabs2ignore = c()                                                        # should any tabs be ignored for now?
 theSheet = gs_url(thisURL, verbose = F)                                                        # identify the sheet
 Sheetpath = gs_download(from = theSheet, to = paste0(OutFolder, "mdwkbk.xlsx"), overwrite = T) # download it as an excel file
 mdworkbook = openxlsx::loadWorkbook(Sheetpath)                                                 # load it
