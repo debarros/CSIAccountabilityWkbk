@@ -200,6 +200,7 @@ if(nrow(forms.new) > 0){
 homeless = progserv[progserv$PROGRAMSCODEPROGRAMSERVICECODE %in% c(8262, 8272, 0892),]
 
 if(nrow(homeless) > 0){
+  fine = 0
   homelessStudents = homeless$StudentID
   homelessReducedLunch = reducedLunch$StudentID[reducedLunch$StudentID %in% homelessStudents]
   homelessFreeLunch = freeLunch[freeLunch$StudentID %in% homelessStudents,]
@@ -216,17 +217,21 @@ if(nrow(homeless) > 0){
   if(length(homelessNoLunch) > 0){
     print("The following students need free lunch service added with the HOMELESS eligibility code.")
     print(homelessNoLunch)
-  }
+  } else { fine = fine + 1}
   
   if(length(homelessReducedLunch) > 0){
     print(paste0("the following students have reduced price lunch program service, ",
                  "but should have free lunch with the HOMELESS eligibility code."))
     print(homelessReducedLunch)
-  }
+  } else { fine = fine + 1}
   
   if(length(homelessFreeLunch) > 0){
     print("The following students have free lunch service but need the HOMELESS eligibility code.")
     print(homelessFreeLunch)
+  } else {fine = fine + 1}
+  
+  if(fine == 3){
+    print("No issues were found where students need lunch status changes due to homelessness.")
   }
 }
 
@@ -235,7 +240,40 @@ if(nrow(homeless) > 0){
 
 foster = progserv[progserv$PROGRAMSCODEPROGRAMSERVICECODE %in% c(8300),]
 if(nrow(foster) > 0){
-  print("Do something with the foster students.")
+  fine = 0
+  fosterStudents = foster$StudentID
+  fosterReducedLunch = reducedLunch$StudentID[reducedLunch$StudentID %in% fosterStudents]
+  fosterFreeLunch = freeLunch[freeLunch$StudentID %in% fosterStudents,]
+  fosterAllLunch = unique(c(fosterReducedLunch, fosterFreeLunch$StudentID))
+  fosterNoLunch = setdiff(fosterStudents, fosterAllLunch)
+  fosterFreeLunch$fosterEligibility = F
+  for(i in 1:nrow(fosterFreeLunch)){
+    fosterFreeLunch$fosterEligibility[i] = betterGrepl.any(
+      pattern = "FOSTER", 
+      x = as.character(fosterFreeLunch[i,paste0("PROGRAMELIGIBILITYCODE", 1:6)]))
+  }
+  fosterFreeLunch = fosterFreeLunch$StudentID[!fosterFreeLunch$fosterEligibility]
+  
+  if(length(fosterNoLunch) > 0){
+    print("The following students need free lunch service added with the FOSTER eligibility code.")
+    print(fosterNoLunch)
+  } else { fine = fine + 1}
+  
+  if(length(fosterReducedLunch) > 0){
+    print(paste0("the following students have reduced price lunch program service, ",
+                 "but should have free lunch with the FOSTER eligibility code."))
+    print(fosterReducedLunch)
+  } else { fine = fine + 1}
+  
+  if(length(fosterFreeLunch) > 0){
+    print("The following students have free lunch service but need the FOSTER eligibility code.")
+    print(fosterFreeLunch)
+  } else {fine = fine + 1}
+  
+  if(fine == 3){
+    print("No issues were found where students need lunch status changes due to fostering.")
+  }
+  
 }
 
 migrant = progserv[progserv$PROGRAMSCODEPROGRAMSERVICECODE %in% c(0330),]
@@ -440,9 +478,45 @@ summary(factor(SnapMedCertEntry$Category))
 
 # This should be based on the students enrolled on April 1st
 
-
 # Determine all students who were enrolled on April 1st
 # For each one, use the eligibility codes in the program service records to classify each student
+# For DCMP, break down by SNAP vs Medicaid
+# Actually, it would be better to just have a column for each classification and enter it as True or False
+# Then, all of that can be exported and modified as necessary for other things not included in data herein
+
+dateVars = c("SCHOOLEXITDATEENROLLMENTEXITDATE", "SCHOOLENTRYDATEENROLLMENTENTRYDATE")
+Enroll.CEP = EnrollExt[,c("StudentID", dateVars)]
 
 
+for(i in dateVars){
+  Enroll.CEP[,i][Enroll.CEP[,i] == ""] = NA
+  Enroll.CEP[,i] = xlDate(Enroll.CEP[,i]) 
+}
+
+colnames(Enroll.CEP)[colnames(Enroll.CEP) %in% dateVars] = c("Exit", "Entry")
+
+Enroll.CEP$Exit[is.na(Enroll.CEP$Exit)] = schoolYear(x = "end")
+
+april1 = as.Date(paste0(schoolYear()+1, "-04-01"))
+Enroll.CEP$OnApril1 = Enroll.CEP$Exit >= april1 & Enroll.CEP$Entry <= april1
+Enroll.CEP = Enroll.CEP[Enroll.CEP$OnApril1,]
+Enroll.CEP$LastName = StudentLiteExtract$LASTNAMESHORTSTUDENTSLASTNAME[match(Enroll.CEP$StudentID, StudentLiteExtract$StudentID)]
+Enroll.CEP$FirstName = StudentLiteExtract$FIRSTNAMESHORTSTUDENTSFIRSTNAME[match(Enroll.CEP$StudentID, StudentLiteExtract$StudentID)]
+Enroll.CEP$GradeLevel = StudentLiteExtract$CURRENTGRADELEVELGRADELEVEL[match(Enroll.CEP$StudentID, StudentLiteExtract$StudentID)]
+
+fields = c("SNAP", "ExtensionOfEligibility", "Foster", "Homeless", "Migrant", "Runaway", "HeadStart", "Medicaid")
+Enroll.CEP[,fields] = F
+
+
+for(i in 1:nrow(Enroll.CEP)){
+  curID = Enroll.CEP$StudentID[i]
+  Enroll.CEP$SNAP[i] = as.character(curID) %in% NyssisSnap$Local.ID
+  Enroll.CEP$Foster[i] = curID %in% foster$StudentID
+  Enroll.CEP$Homeless[i] = curID %in% homeless$StudentID
+  Enroll.CEP$Medicaid[i] = as.character(curID) %in% NyssisMedicaid$Local.ID
+}
+
+
+summary(Enroll.CEP[,fields])
+write.csv(x = Enroll.CEP, file = paste0(OutFolder, "CEP export.csv"))
 
