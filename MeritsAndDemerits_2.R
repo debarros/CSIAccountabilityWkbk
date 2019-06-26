@@ -7,15 +7,18 @@
 # Enter the url of the sheet
 thisURL = "https://docs.google.com/spreadsheets/d/1HyuQh5_1ZpQzrM8VkgtZ2dVekU3Qp5WqpC9WNPNvdGU/edit?usp=sharing"  
 
-tabs2ignore = c()                                                        # should any tabs be ignored for now?
-theSheet = gs_url(thisURL, verbose = F)                                                        # identify the sheet
-Sheetpath = gs_download(from = theSheet, to = paste0(OutFolder, "mdwkbk.xlsx"), overwrite = T) # download it as an excel file
-mdworkbook = openxlsx::loadWorkbook(Sheetpath)                                                 # load it
-dataTabs = openxlsx::getSheetNames(Sheetpath)                                                  # identify the tabs
-dataTabs = dataTabs[!(dataTabs %in% tabs2ignore)]                                              # remove any that are not needed
-demeritList = vector(mode = "list", length = length(dataTabs))                                 # create a list to hold the demerits
-names(demeritList) = dataTabs                                                                  # name the list elements
-meritList = demeritList                                                                        # create a list to hold the merits
+tabs2ignore = c() # should any tabs be ignored for now?
+theSheet = SWSM(gs_url(thisURL, verbose = F))                    # identify the sheet
+Sheetpath = SWSM(gs_download(                                    # download it as an excel file
+  from = theSheet, 
+  to = paste0(OutFolder, "mdwkbk.xlsx"), 
+  overwrite = T)) 
+mdworkbook = openxlsx::loadWorkbook(Sheetpath)                   # load it
+dataTabs = openxlsx::getSheetNames(Sheetpath)                    # identify the tabs
+dataTabs = dataTabs[!(dataTabs %in% tabs2ignore)]                # remove any that are not needed
+demeritList = vector(mode = "list", length = length(dataTabs))   # create a list to hold the demerits
+names(demeritList) = dataTabs                                    # name the list elements
+meritList = demeritList                                          # create a list to hold the merits
 
 
 #--------------------------------#
@@ -64,7 +67,7 @@ for(thisTabName in dataTabs){
 #------------------------------------#
 #### Check for errors in demerits ####
 #------------------------------------#
-i = 20
+
 for(i in 1:length(demeritList)){
   print(paste0("Examing tab ", names(demeritList)[i]))
   curSheet = demeritList[[i]]
