@@ -1,16 +1,17 @@
 # SummerSchool.R
 
-# Load data
+#----------------#
+#### Load data ###
+#----------------#
+
 # This requires the functions.R file be sourced and the unstoredgrades be loaded
 regentsScores = read.xlsx(xlsxFile = PSLocation, sheet = "Regents long")
 grades = unstoredGrades
 courses = read.xlsx(xlsxFile = PSLocation, sheet = "Summer Courses")
 
-# Add additional information and select a plan for each row in the grades data.frame
-grades = SummerSchool1(grades, courses, regentsScores)
 
-# Set up a data.frame of just students
-students = SummerSchool2(grades)
+grades = SummerSchool1(grades, courses, regentsScores) # Add additional information and select a plan for each row in the grades data.frame
+students = SummerSchool2(grades) # Set up a data.frame of just students
 
 # Resolve the "Possibly Summer" situations that can be handled automatically.
 # This is where the rule that students can only take 2 summer school courses is applied
@@ -34,15 +35,28 @@ SummerGrades = SummerGrades[order(SummerGrades$StudentHasIssues,
                                   decreasing = T),]
 
 # Output the file for manual issue resolution
-write.csv(x = SummerGrades, file = paste0(OutFolder, "SummerGrades table.csv"))
+write.csv(x = SummerGrades, file = paste0(OutFolder, "SummerGrades table.csv"), row.names = F)
+
+#--------------------------#
+#### Manual Adjustments ####
+#--------------------------#
 
 # At this point, go through the file and fix the situations in where students still have "Possibly Summer".
+
+
+#------------------------#
+#### Section Planning ####
+#------------------------#
+
 
 # Read in the updated table of grades that are not passing
 RevisedGrades = read.csv(file = paste0(OutFolder, "SummerGrades table.csv"), stringsAsFactors = F)
 
 # Get a set of unique summer courses and remove those not being offered
 SummerCourses = SummerSchool4(courses, RevisedGrades)
+FinalPlans = SummerSchool6(RevisedGrades, SummerCourses) # adjust plan for students in underenrolled courses
+
+
 write.csv(x = SummerCourses[SummerCourses$SectionCount > 0,], file = paste0(OutFolder,"table of summer course sections.csv"))
 
 # Get the set of summer course singletons (only 1 section being offered)
@@ -59,8 +73,6 @@ for(i in 1:nrow(Pairings.all)){
   Pairings.all$StudentCount[i] = length(Combo)
 }
 Pairings.all = Pairings.all[Pairings.all$StudentCount >0,]
-
-
 
 # Determine all possible pairings of singelton courses and count how many students are taking that pair
 Pairings = as.data.frame(t(combn(x = SumCrse.single$Equivalent.Summer.Course, m = 2)), stringsAsFactors = F)
@@ -122,15 +134,15 @@ print(ScheduleDemands)
 write.csv(x = ScheduleDemands, file = paste0(OutFolder, "schedule demands.csv"))
 
 # For each student, determine the number of various plans for failed courses
-students = SummerSchool5(students, RevisedGrades)
+students = SummerSchool5(students, FinalPlans)
 
-# Create a counter in the RevisedGrades data.frame that indicates which record it is for that particular student
-RevisedGrades$StudentCount = 0
+# Create a counter in the FinalPlans data.frame that indicates which record it is for that particular student
+FinalPlans$StudentCount = 0
 students$MarkedRedo = 0
-for(i in 1:nrow(RevisedGrades)){
-  curID = RevisedGrades$Student.Number[i]
-  RevisedGrades$StudentCount[i] = students$MarkedRedo[students$Student.Number == curID] + 1
-  students$MarkedRedo[students$Student.Number == curID] = RevisedGrades$StudentCount[i]
+for(i in 1:nrow(FinalPlans)){
+  curID = FinalPlans$Student.Number[i]
+  FinalPlans$StudentCount[i] = students$MarkedRedo[students$Student.Number == curID] + 1
+  students$MarkedRedo[students$Student.Number == curID] = FinalPlans$StudentCount[i]
 }
 
 # Make sure that the MarkedRedo and totalRedo columns are the same.
@@ -142,14 +154,14 @@ coursecolumnNames = apply(expand.grid(c("course", "plan"), 1:coursecolumnCount),
 students[,coursecolumnNames] = ""
 
 # Load the course names and plans into the new columns in the students table
-for(i in 1:nrow(RevisedGrades)){
-  curCourse = RevisedGrades$Course[i]
-  curPlan = RevisedGrades$ThePlan[i]
+for(i in 1:nrow(FinalPlans)){
+  curCourse = FinalPlans$Course[i]
+  curPlan = FinalPlans$ThePlan[i]
   if(curPlan == "Definitely Summer"){
-    curCourse = RevisedGrades$SummerCourse[i]
+    curCourse = FinalPlans$SummerCourse[i]
   }
-  curID = RevisedGrades$Student.Number[i]
-  curCount = RevisedGrades$StudentCount[i]
+  curID = FinalPlans$Student.Number[i]
+  curCount = FinalPlans$StudentCount[i]
   
   students[students$Student.Number == curID,paste0("course_",curCount)] = curCourse
   students[students$Student.Number == curID,paste0("plan_",curCount)] = curPlan
@@ -170,5 +182,126 @@ for(i in planColumns){
 
 # Output the data for making student letters
 write.csv(x = studentLetters, file = paste0(OutFolder, "summer school mail merge data.csv"))
+
+# See what sections need to be adjacent to each other in the schedule
+Pairings.all$V1.sectCount = SummerCourses$SectionCount[match(Pairings.all$V1, SummerCourses$Equivalent.Summer.Course)]
+Pairings.all$V2.sectCount = SummerCourses$SectionCount[match(Pairings.all$V2, SummerCourses$Equivalent.Summer.Course)]
+Pairings.all$KeepAdjacent = Pairings.all$V1.sectCount + Pairings.all$V2.sectCount == 2
+
+
+#-------------------------#
+#### Schedule Planning ####
+#-------------------------#
+
+# Go look at the output and decide who is teaching what and during which periods
+
+
+#------------------------------------#
+#### Placing students in sections ####
+#------------------------------------#
+
+
+sectionTable = read.xlsx(xlsxFile = PSLocation, sheet = "Summer Sections")
+
+Roster1 = rep(NA_character_, 12)
+Roster = list(rep(Roster1, nrow(sectionTable)))
+Roster = vector(mode = "list", length = nrow(sectionTable))
+for(i in 1:nrow(sectionTable)){ # change this to lapply
+  Roster[[i]] = Roster1
+}
+
+sectionTable$Roster = Roster
+sectionTable$RosterNames = Roster
+
+
+
+
+SummerEnrollments = FinalPlans[FinalPlans$ThePlan == "Definitely Summer",c("Student.Number", "Student", "SummerCourse")]
+
+# Check for courses in summer enrollments but not the section table, and vice versa
+setdiff(unique(SummerEnrollments$SummerCourse), unique(sectionTable$Course))
+setdiff(unique(sectionTable$Course), unique(SummerEnrollments$SummerCourse))
+
+
+SummerEnrollments$CourseIsSingleton = F
+# Identify students who have 1 singleton and 1 non singleton
+for (i in 1:nrow(SummerEnrollments)){
+  curCourse = SummerEnrollments$SummerCourse[i]
+  curCount = SummerCourses$SectionCount[SummerCourses$Equivalent.Summer.Course == curCourse]
+  SummerEnrollments$CourseIsSingleton[i] = curCount == 1
+}
+
+SummerEnrollments$Priority = 2
+for (i in 1:nrow(SummerEnrollments)){
+  curID = SummerEnrollments$Student.Number[i]
+  curSingletons = SummerEnrollments$CourseIsSingleton[SummerEnrollments$Student.Number == curID]
+  curCourseCount = length(curSingletons)
+  if(mean(curSingletons) == 0.5){
+    SummerEnrollments$Priority[i] = 3
+  } else if(curCourseCount == 1){
+    SummerEnrollments$Priority[i] = 1
+  }
+}
+
+
+SummerEnrollments = SummerEnrollments[order(SummerEnrollments$Student.Number),]
+SummerEnrollments = SummerEnrollments[order(SummerEnrollments$CourseIsSingleton, SummerEnrollments$Priority, decreasing = T),]
+rownames(SummerEnrollments) = NULL
+SummerEnrollments$ManualAdjustment = F
+
+
+
+
+
+students[,paste0("HasP", 1:3)] = F
+
+# Assign students to sections
+
+sectionTable = sectionTable[order(sectionTable$Period == 2, sectionTable$Period == 1, decreasing = T),]
+rownames(sectionTable) = NULL
+sectionTable$Preference = 1:nrow(sectionTable)
+
+AssignmentList = list("SummerEnrollments" = SummerEnrollments, "sectionTable" = sectionTable, "students" = students)
+AssignmentList = Summer.AssignStudents(AssignmentList)
+
+SummerEnrollments = AssignmentList$SummerEnrollments
+sectionTable = AssignmentList$sectionTable
+students = AssignmentList$students
+
+# max class size is 12
+
+
+# Do any students need manual adjustment?
+sum(SummerEnrollments$ManualAdjustment)
+SummerEnrollments[SummerEnrollments$ManualAdjustment,]
+
+SummerEnrollments[SummerEnrollments$Student.Number == 161710433,]
+
+# Do any students have P1 and P3 but not P2?
+sum(students$HasP1 & students$HasP3 & !students$HasP2)
+splitStudentIDs = students$Student.Number[students$HasP1 & students$HasP3 & !students$HasP2]
+SummerEnrollments[SummerEnrollments$Student.Number %in% splitStudentIDs,]
+
+Pairings.all
+
+
+
+StudentSchedules = SummerEnrollments[!duplicated(SummerEnrollments$Student.Number), c("Student.Number", "Student")]
+StudentSchedules$Period1Course = ""
+StudentSchedules$Period2Course = ""
+StudentSchedules$Period3Course = ""
+
+# Add columns to StudentSchedules for the p1-3 teachers
+# for each row of sectionTable {
+#    Get the teacher, class, and period
+#    Get the roster of student IDs
+#    for each student ID that is not NA {
+#       Find that student in StudentSchedules
+#       Find the teacher name column for that period and put the teacher name in it
+#       Find the class column for that period and put the class in it
+#    }
+# }
+
+
 
 
