@@ -223,8 +223,8 @@ setdiff(unique(SummerEnrollments$SummerCourse), unique(sectionTable$Course))
 setdiff(unique(sectionTable$Course), unique(SummerEnrollments$SummerCourse))
 
 
-SummerEnrollments$CourseIsSingleton = F
 # Identify students who have 1 singleton and 1 non singleton
+SummerEnrollments$CourseIsSingleton = F
 for (i in 1:nrow(SummerEnrollments)){
   curCourse = SummerEnrollments$SummerCourse[i]
   curCount = SummerCourses$SectionCount[SummerCourses$Equivalent.Summer.Course == curCourse]
@@ -287,21 +287,41 @@ Pairings.all
 
 
 StudentSchedules = SummerEnrollments[!duplicated(SummerEnrollments$Student.Number), c("Student.Number", "Student")]
-StudentSchedules$Period1Course = ""
-StudentSchedules$Period2Course = ""
-StudentSchedules$Period3Course = ""
-
-# Add columns to StudentSchedules for the p1-3 teachers
-# for each row of sectionTable {
-#    Get the teacher, class, and period
-#    Get the roster of student IDs
-#    for each student ID that is not NA {
-#       Find that student in StudentSchedules
-#       Find the teacher name column for that period and put the teacher name in it
-#       Find the class column for that period and put the class in it
-#    }
-# }
+StudentSchedules[,paste0("Period",1:3,"Course")] = ""
+StudentSchedules[,paste0("Period",1:3,"Teacher")] = ""
+row.names(StudentSchedules) = NULL
 
 
+for(curSect in 1:nrow(sectionTable)){
+  print(paste0("section row:", curSect))
+  curTeach = sectionTable$Teacher[curSect]
+  curCourse = sectionTable$Course[curSect]
+  curPeriod = sectionTable$Period[curSect]
+  idRoster = sectionTable$Roster[curSect][[1]]
+  nameRoster = sectionTable$RosterNames[curSect][[1]]
+  for(curStu in 1:length(idRoster)){
+    curID = idRoster[curStu]
+    print(paste0("current student ID: ",curID))
+    if(!is.na(curID)){
+      curName = nameRoster[curStu]
+      StudentSchedules[StudentSchedules$Student.Number == curID,paste0("Period", curPeriod, "Course")] = curCourse
+      StudentSchedules[StudentSchedules$Student.Number == curID,paste0("Period", curPeriod, "Teacher")] = curTeach
+    }
+  }
+}
 
+
+write.csv(x = StudentSchedules, file = paste0(OutFolder, "summer school student schedules mail merge.csv"))
+
+TeacherRosters = as.data.frame(t(sectionTable[,1:3]), stringsAsFactors = F)
+TeacherRosters[(nrow(TeacherRosters)+1):(nrow(TeacherRosters)+19),] = ""
+
+for(i in 1:ncol(TeacherRosters)){
+  curRoster = sectionTable$RosterNames[[i]]
+  curRoster = curRoster[!is.na(curRoster)]
+  curCount = length(curRoster)
+  TeacherRosters[(1:curCount)+3,i] = curRoster
+}
+
+write.csv(x = TeacherRosters, file = paste0(OutFolder, "summer school rosters.csv"))
 
