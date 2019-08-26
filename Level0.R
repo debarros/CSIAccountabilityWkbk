@@ -28,6 +28,7 @@ demographics$GUIDANCECOUNSELORID = ""
 
 dips = demographics$DIPLOMATYPECODECREDENTIALTYPECODE   # grab the diploma types
 dips[dips == "68"] = "068"                              # change diploma type code 68 to 068
+dips[dips == "85"] = "085"                              # change diploma type code 85 to 085
 demographics$DIPLOMATYPECODECREDENTIALTYPECODE = dips   # put the diploma type codes back in
 
 
@@ -96,4 +97,39 @@ demographics[which(demographics$DiplomaTypeCode == 762),]
 
 demographics$StudentId[!is.na(demographics$DiplomaTypeCode)]
 
+
+
+#----------------------------------#
+#### Student Class Grade Detail ####
+#----------------------------------#
+
+# This section fixes the student class grade detail report by populating the credits attempted and credits earned
+
+SCGD = read.csv(file.choose(), header = F, stringsAsFactors = F)            # read in the file
+x = dBtools::GetNiceColumnNames("STUDENT CLASS GRADE DETAIL", templates)    # Add column names
+colnames(SCGD) = x
+SCGD$CREDITSATTEMPTED = 1                                                   # Default credits attempted to 1
+SCGD$CREDITSATTEMPTED[SCGD$MARKINGPERIODCODE > 1] = .5                      # For semester courses, make it .5
+for(i in 1:nrow(SCGD)){                                                     # For each entry
+  if(SCGD$ALPHAGRADE[i] != "F"){                                            # If the student didn't fail
+    SCGD$CREDITSEARNED[i] = SCGD$CREDITSATTEMPTED[i]                        # Set credits earned to same as credits attempted
+  } # /if
+} # /for
+
+SCGD = DFna.to.empty(SCGD)                                                  # Convert NAs to empty strings
+SCGD$SUPPLEMENTARYCOURSEDIFFERENTIATOR = NA                                 # This field has to be NA for some reason
+SCGD$DUALCREDITCODE[SCGD$COURSECODELOCALCOURSECODE == "AP 1113H"] = "INDST" # Add the "in district" code for dual credit classes
+
+for(i in 1:nrow(SCGD)){
+  if(SCGD$COURSECODELOCALCOURSECODE[i] == "AP 1113H"){
+    SCGD$POSTSECONDARYCREDITUNITS[i] = sum(college.raw$Credits[college.raw$ID == SCGD$STUDENTIDSCHOOLDISTRICTSTUDENTID[i]])
+    if(is.na(SCGD$POSTSECONDARYCREDITUNITS[i])){
+      SCGD$POSTSECONDARYCREDITUNITS[i] = 0
+    }
+  }
+}
+
+summary(as.factor(SCGD$POSTSECONDARYCREDITUNITS), )
+
+write.SIRS(SCGD, file = paste0(OutFolder,"SCGD.csv"))                       # Output the file
 
