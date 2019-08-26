@@ -285,7 +285,7 @@ SummerEnrollments[SummerEnrollments$Student.Number %in% splitStudentIDs,]
 Pairings.all
 
 
-
+# The next line should also add student grade levels
 StudentSchedules = SummerEnrollments[!duplicated(SummerEnrollments$Student.Number), c("Student.Number", "Student")]
 StudentSchedules[,paste0("Period",1:3,"Course")] = ""
 StudentSchedules[,paste0("Period",1:3,"Teacher")] = ""
@@ -324,4 +324,9 @@ for(i in 1:ncol(TeacherRosters)){
 }
 
 write.csv(x = TeacherRosters, file = paste0(OutFolder, "summer school rosters.csv"))
+
+
+
+
+grades[grades$Student.Number == 181911732,]
 
