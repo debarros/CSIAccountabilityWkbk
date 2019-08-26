@@ -1,11 +1,11 @@
 #functions.R
 
+library(dBtools)
 library(abind)
-library(ggplot2, quietly = T, verbose = F)
+SWSM(library(ggplot2, quietly = T, verbose = F))
 library(scales)
 library(reshape2)
 library(openxlsx)
-library(dBtools)
 library(googlesheets)
 library(stringr)
 library(googledrive)
