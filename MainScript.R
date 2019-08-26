@@ -15,7 +15,7 @@ source("functions.R")
 #-------------------------------#
 # Get the most up to date stuff from the actual workbook
 # Note: you must have access to the data drive on the school network
-# This gets used in a bunch of places, including Students.R and MeritsAndDemerits_2.R
+# This gets used in a bunch of places, including Students.R, Regents.R, and MeritsAndDemerits_2.R
 Workbookraw.xlsx = read.xlsx(
   xlsxFile = AcctWkBkLocation,
   sheet = "Data",startRow = 2)
@@ -32,7 +32,7 @@ for(i in dateVars){  Workbook[,i] = xlDate(Workbook[,i]) }
 # Read in student data from powerschool
 # Note: update the data in PowerSchoolAll.xlsx before loading it
 # There is a tab in the file that shows what fields to export
-# This gets used in a bunch of places, such as Students.R, Regents.R
+# This gets used in a bunch of places, such as Students.R, Regents.R, and MathCourseAssignments.R
 powerschoolraw = read.xlsx(xlsxFile = PSLocation, sheet = "Student Table")
 # Format the date variables
 dateVars = c("DistrictEntryDate", "EntryDate", "ExitDate")
@@ -91,7 +91,7 @@ unstoredGrades$Last.Grade.Update = xlDate(unstoredGrades$Last.Grade.Update)
 #### Course-Subject Alignments ####
 #---------------------------------#
 # Sign in to google
-# This gets used by MathRegents.R and masterSchedule.R (among others)
+# This gets used by MathRegents.R, MathCourseAssignments.R, and masterSchedule.R (among others)
 SWSM(gs_auth()) #this may launch a browser so you can sign into your account
 # Get the course-subject alignments
 CourseSubject = SWSM(gs_url(x = CourseSubjectAddress, lookup = F, visibility = "private"))
@@ -105,13 +105,24 @@ FullAlignment = rbind.data.frame(alignment, alignment2, stringsAsFactors = F)
 #------------------------#
 #### Regents Database ####
 #------------------------#
-#Get the the Output query from the Regents database (located at data drive/database project/regents.accdb)
-#Paste it into the files RegentsDB.csv in the folder for this project
-#note: if new exams (not just new scores) have been entered, 
+# Get the the Output query from the Regents database (located at data drive/database project/regents.accdb)
+# Paste it into the files RegentsDB.csv in the folder for this project
+# note: if new exams (not just new scores) have been entered, 
 #      the sql code for the Output query will need to be modified 
 #      to pull that exam's scores and dates from TestScoreOutput and TestDateOutput
+# This gets used in Regents.R, and maybe other places as well
+
 RegentsDBraw = read.csv(RDBLocation, stringsAsFactors = FALSE) 
 
+
+#--------------------------#
+#### All Regents Scores ####
+#--------------------------#
+# Get the the Scores table from the Regents database (located at data drive/database project/regents.accdb)
+# Paste it into PowerSchoolAll.xlsx file, on the "Regents long" tab.
+# This gets used in SummerSchool.R and historical regents pass rates.R
+
+regentsScores = read.xlsx(xlsxFile = PSLocation, sheet = "Regents long")
 
 
 #----------------------------#
@@ -140,7 +151,7 @@ templates = loadWorkbook(TemplateLocation)
 #------------------------#
 #### SATs, PSATs, etc ####
 #------------------------#
-# This gets used by PSATScores.R
+# This gets used by PSATScores.R and Level0.R
 
 # Load SAT data
 SAT.raw = read.xlsx(xlsxFile = CollegeBoardLocation, 
@@ -162,6 +173,8 @@ AP.raw$Test.Date = xlDate(AP.raw$Test.Date)
 # Load ACT data
 # ACT.raw = read.xlsx(xlsxFile = CollegeBoardLocation, sheet = "ACT")
 
+# Load college courses
+college.raw = read.xlsx(xlsxFile = CollegeBoardLocation, sheet = "College Courses")
 
 
 #-----------------#
@@ -217,5 +230,7 @@ for(i in dateVars){  attendance[,i] = xlDate(attendance[,i]) }
 #### Current Students ####
 #------------------------#
 
+# This gets used in MathCourseAssignments.R and possibly other places
 currentStudents = drive_download(as_id(CurrentStudentsAddress), path = paste0(OutFolder, "currentStudents.csv"), overwrite = T)
 currentStudents = read.csv(paste0(OutFolder, "currentStudents.csv"), stringsAsFactors = F)
+
