@@ -15,7 +15,7 @@ PowerSchool = powerschoolraw
 
 # if new exams have been introduced, you'll need to add them here
 # Even better, this should be updated in the test name tab of PowerSchoolAll.xlsx
-Exams = c("ELAOld","AlgOld","GeomOld","Trig","Bio","Earth","Chem","Phys","US","Global","ELACC","AlgCC","GeomCC", "Alg2CC", "GlobTrans")
+Exams = c("ELAOld","AlgOld","GeomOld","Trig","Bio","Earth","Chem","Phys","US","Global","ELACC","AlgCC","GeomCC", "Alg2CC", "GlobTrans", "Glob2")
 nExam = length(Exams)
 Categories = c("Alg","Geom","Trig","Bio","Earth","Chem","Phys","US","Global","ELA")
 nCat = length(Categories)
@@ -32,7 +32,7 @@ column_names = expand.grid(c("Scaled.Score", "Performance.Level", "Exam.Year.and
                            c("English", "Algebra", "Geometry", "Trig", "Bio", 
                              "Earth.Science", "Chemistry", "Physics", "US.History", 
                              "Global", "Common.Core.ELA", "Common.Core.Algebra", 
-                             "Common.Core.Geometry", "Common.Core.Algebra.2", "Global.Transition"))
+                             "Common.Core.Geometry", "Common.Core.Algebra.2", "Global.Transition", "Global.2.New.Framework"))
 column_names = c("Local.ID.(optional)", apply(column_names[,c(2,1)], 1, paste0, collapse = ""))
 
 Workbook.sub = Workbook.sub[,column_names]  # subset the workbook to the relevant columns
@@ -94,7 +94,8 @@ if(sum(!MbetterComp(CompareMatrix, dbMatrix) & !is.na(CompareMatrix))){         
 #     Take a look at the ScoresMissingFromDatabase.csv file
 #     Those are instances in which a student has a score in the workbook but not in the database
 
-# if there are any best scores not in the workbook, create output to be pasted into the Workbook
+
+# Check if there are any best scores not in the workbook, and if so, create output to be pasted into the Workbook
 if(sum(!MbetterComp(CompareMatrix, wkbkMatrix) & !is.na(CompareMatrix)) > 0){ 
   wkbkOutput = data.frame(ID = rownames(CompareMatrix)) # set up the output object
   temp = CompareMatrix                                  # create a temporary version of the best scores matrix
@@ -135,7 +136,7 @@ if(sum(!MbetterComp(CompareMatrix, wkbkMatrix) & !is.na(CompareMatrix)) > 0){
 } else {
   print("Workbook is fine")
 }
-#Note:
+# Note:
 #     You can paste the scores and dates one column at a time, but that takes a while.
 #     You could paste the whole thing, but then you'd have to fix all of the performance level formulas.
 
@@ -159,18 +160,21 @@ Exam2CatTable = data.frame(
                   "US",        "US",
                   "Chem",      "Chem",
                   "Global",    "Global",
-                  "GlobTrans", "Global"), 
+                  "GlobTrans", "Global",
+                  "Glob2",     "Global"), 
          ncol = 2, byrow = T),
   stringsAsFactors = F)
 colnames(Exam2CatTable) = c("Exam", "Category")
+# testLookup[,c("Code", "Category")]
 
 Alg = VbetterMax(CompareMatrix[,"AlgOld"], CompareMatrix[,"AlgCC"])    # get the best scores across the two algebra exams
 Geom = VbetterMax(CompareMatrix[,"GeomOld"], CompareMatrix[,"GeomCC"]) # get the best scores across the two geometry exams
 ELA = VbetterMax(CompareMatrix[,"ELAOld"], CompareMatrix[,"ELACC"])    # get the best scores across the two ELA exams
 Trig = VbetterMax(CompareMatrix[,"Trig"], CompareMatrix[,"Alg2CC"])    # get the best scores across the two Alg2 exams
-Global = VbetterMax(CompareMatrix[,"Global"], CompareMatrix[,"GlobTrans"])    # get the best scores across the two Alg2 exams
-CatBest = cbind(Alg, Geom, Trig, CompareMatrix[,5:9], Global, ELA)            # make a matrix of the best scores by category
-# Note: It would be better if the prior line used column names instead of numbers, but that doesn't seem to work with matrices
+Global = M2VbetterMax(CompareMatrix[,c("Global","GlobTrans","Glob2")]) # get the best scores across the three Global exams
+moreColumns = which(colnames(CompareMatrix) %in% c("Bio", "Earth", "Chem", "Phys", "US")) # get the indices of the columns of the other exams
+CatBest = cbind(Alg, Geom, Trig, CompareMatrix[,moreColumns], Global, ELA)     # make a matrix of the best scores by category
+
 
 
 
