@@ -2,7 +2,7 @@
 
 # Note: run Mainscript first
 
-currentTerm = 2600
+currentTerm = 2800
 
 bioCourses = c("Biology 1 credit", "Biology Honors 1 credit", "Biology")
 bioBcourses = c("Biology Part B", "Biology B")
@@ -91,4 +91,4 @@ for(i in 1:nrow(bioStudents)){
 
 summary(as.factor(bioStudents$nextCourse))
 
-write.csv(x = bioStudents, file = "bioStudentCourseAssignments.csv")
+write.csv(x = bioStudents, file = paste0(OutFolder,"bioStudentCourseAssignments.csv"))
