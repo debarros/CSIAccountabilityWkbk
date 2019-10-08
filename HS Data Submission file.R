@@ -4,6 +4,7 @@
 
 lastDay = schoolYear(x = "end", y = Sys.Date() - 365)
 bedsDay = BedsDate(schoolYear() - 1)
+termID = schoolYear(x = "termID", y = bedsDay)
 
 # Read in the most up-to-date demographics export from PowerSchool from the relevant year
 studentLite = read.csv(file.choose(), header = F)
@@ -19,6 +20,15 @@ EnrollExt$SCHOOLEXITDATEENROLLMENTEXITDATE = as.Date(EnrollExt$SCHOOLEXITDATEENR
 EnrollExt$CoversBedsDay = EnrollExt$SCHOOLENTRYDATEENROLLMENTENTRYDATE < bedsDay & EnrollExt$SCHOOLEXITDATEENROLLMENTEXITDATE > bedsDay
 bedsStudents = EnrollExt$STUDENTIDSCHOOLDISTRICTSTUDENTID[EnrollExt$CoversBedsDay]
 bedsStudents = unique(bedsStudents)
+
+
+# Read in the most up-to-date program services export from PowerSchool from the relevant year
+progFact = read.csv(file.choose(), header = F, stringsAsFactors = F)
+colnames(progFact) = GetNiceColumnNames(sheet = "PROGRAMS FACT", templates = templates)
+dateVars = c("SCHOOLYEARDATE", "BEGINNINGDATEPROGRAMSERVICEENTRYDATE", "ENDINGDATEPROGRAMSERVICEENDDATE")
+for(i in dateVars){ progFact[,i] = as.Date(progFact[,i]) }
+progFact$ENDINGDATEPROGRAMSERVICEENDDATE[is.na(progFact$ENDINGDATEPROGRAMSERVICEENDDATE)] = as.Date(lastDay)
+
 
 # Read in the crosswalk data (mapping old fields to new ones)
 crosswalk = read.xlsx(
@@ -83,7 +93,7 @@ for(i in 1:nrow(submittable)){
 columnNames = colnames(submittable)
 for(i in 1:length(columnNames)){
   if(columnNames[i] %in% crosswalk$Old.Format.as.read.by.R){
-    x = crosswalk$New.Format[VbetterComp(crosswalk$Old.Format.as.read.by.R, columnNames[i])]
+    x = crosswalk$September.2019.Format[VbetterComp(crosswalk$Old.Format.as.read.by.R, columnNames[i])]
     if(length(x) != 1) {
       print(i)
       print(x)
@@ -92,8 +102,8 @@ for(i in 1:length(columnNames)){
   }
 }
 colnames(submittable) = columnNames
-submittable = submittable[,columnNames %in% crosswalk$New.Format]
-moreColumns = setdiff(crosswalk$New.Format, columnNames)
+submittable = submittable[,columnNames %in% crosswalk$September.2019.Format]
+moreColumns = setdiff(crosswalk$September.2019.Format, columnNames)
 submittable[,moreColumns] = NA
 
 
@@ -103,17 +113,19 @@ submittable[,moreColumns] = NA
 #--------------------------------------------------#
 
 # Homeless - mark as No.  Then mark as Yes for any student who was homeless on BEDS day last year
-# Note: For the 17-18 year, info on the date range of homelessness was not required, so any student marked as homeless in included.
-# For the 18-19 school year, use the date range of the 8262 program service code to determine whether the student was homeless on BEDS day
+# Use the date range of the 8262 program service code to determine whether the student was homeless on BEDS day
 
-homelessIDs = studentLite$STUDENTIDSCHOOLDISTRICTSTUDENTID[studentLite$HOMELESSHOMELESSINDICATOR == "Y"]
+homelessness = progFact[progFact$PROGRAMSCODEPROGRAMSERVICECODE == 8262,]
+homelessness = homelessness[homelessness$BEGINNINGDATEPROGRAMSERVICEENTRYDATE < bedsDay,]
+homelessness = homelessness[homelessness$ENDINGDATEPROGRAMSERVICEENDDATE > bedsDay,]
+homelessIDs = homelessness$STUDENTIDSCHOOLDISTRICTSTUDENTID
 submittable$Homeless = "No"
 submittable$Homeless[submittable$`Local ID` %in% homelessIDs] = "Yes"
 
 
-# Number of Credits during 17-18 year - use F2 to calculate
+# Number of Credits during the relevant year - use F2 to calculate
 
-curYearF2 = F2[F2$TermID >= 2700 & F2$TermID < 2800,]
+curYearF2 = F2[F2$TermID >= termID & F2$TermID < termID + 100,]
 for(i in 1:nrow(submittable)){
   curStuID = submittable$`Local ID`[i]
   curStuCred = curYearF2[curYearF2$`[1]Student_Number` == curStuID,]
@@ -136,7 +148,7 @@ PSATraw.xlsx$Math  <- as.integer(PSATraw.xlsx$Math)
 PSATraw.xlsx$Write <- as.integer(PSATraw.xlsx$Write)
 
 # Add the subscores together to get the total score
-PSATraw.xlsx$Score <- rowSums(PSATraw.xlsx[,c("Read","Math","Write")], na.rm=TRUE)
+PSATraw.xlsx$Score <- rowSums(PSATraw.xlsx[,c("Read","Math","Write")], na.rm = TRUE)
 
 # Sort by ID, then Score (descending)
 PSATsort <- PSATraw.xlsx[with(PSATraw.xlsx, order(ID, -Score)),]
@@ -273,6 +285,8 @@ write.csv(x = output, file = paste0(OutFolder, "Green Tech High HS Data Submissi
 
 
 
+
+
 #----------------------------------------------------------------#
 #### Now, some more stuff to get the data for the APPR tables ####
 #----------------------------------------------------------------#
@@ -322,6 +336,7 @@ colnames(promotion) = c("Not5", "Earned5", "Not10", "Earned10")
 promotion$Total = promotion$Not5 + promotion$Earned5
 promotion$Rate5 = 100 * promotion$Earned5 / promotion$Total
 promotion$Rate10 = 100 * promotion$Earned10 / promotion$Total
+print(promotion)
 # Note: use the Rate5 for the most recent cohort and Rate10 for the second most recent
 
 
@@ -395,13 +410,25 @@ gradRates$Rate = 100 * gradRates$Did / gradRates$Total
 #-----------------------------------------------------#
 
 # This section does not make any sense.
-
+studentLite$CAREERPATHCODE
+summary(studentLite$CAREERPATHCODE)
+studentLite[studentLite$CAREERPATHCODE == "CTE",]
 
 #----------------------------------------------#
 #### APPR Table - College Prep by Indicator ####
 #----------------------------------------------#
 
-# This section makes little sense.
+# passed an AP
+
+# Passed a CLEP
+
+# Passed a college course
+
+# Achieved college and career readiness
+
+# Did at least 1 of them
+
+
 
 #-----------------------------------------------------#
 #### APPR Table - CCCRI Performance by Cohort Year ####
@@ -427,3 +454,6 @@ matric = as.data.frame.matrix(table(output.ontimegrads$`Cohort Year`, output.ont
 colnames(matric) = c("No", "Yes")
 matric$Total = matric$No + matric$Yes
 matric$Rate = 100 * matric$Yes / matric$Total
+print(matric)
+
+
