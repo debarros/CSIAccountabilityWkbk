@@ -77,27 +77,15 @@ forms = forms[forms$Status != "D",]         # leave out the ones who are Denied 
 
 # Which of this year's students do not appear in the NYSSIS extract?
 StudentsToCheck = setdiff(StudentLiteExtract$StudentID, NyssisFile$Local.ID)
-write(x = paste0(StudentsToCheck, collapse = ","), file = paste0(OutFolder,"studentsToCheck.txt"))
-
-# Go to the current working directory, open the text file, and search powerschool for those students.  
-# Export them with all relevant fields. (phone numbers, addresses, cities, states, zip codes, DOB, Father, Mother, Guardian)
-# Paste the data into an excel workbook
-# Save it in the current year Lunch folder in the data drive
-# name it something like "studentsToCheck (2017-10-05).xlsx"
-
-#----------------------------------------------#
-#### Bulk Upload 2 - making the upload file ####
-#----------------------------------------------#
-
-# Only do this next part if you have already done Bulk Upload 1
-# NOTE: THIS FUNCTION HAS NOT BEEN TESTED
-# The file should be called something like "studentsToCheck (2017-10-05).xlsx"
-CNMS.MakeBulkUpload(xlsxFile = file.choose(), singleGender = "M")
+StudentsToCheck.df = powerschool[powerschool$student_number %in% StudentsToCheck,]
+StudentsToCheck.FilePath = paste0(LunchLocation, "/studentsToCheck (",Sys.Date(),").xlsx")
+write.xlsx(x = StudentsToCheck.df, file = StudentsToCheck.FilePath)
+CNMS.MakeBulkUpload(xlsxFile = StudentsToCheck.FilePath, singleGender = "M", uploadfilename = paste0(OutFolder, "bulkupload.txt"))
 # Upload the file bulkupload.txt to the NYSSIS web interface
 
 
 #-------------------------------------------------#
-#### Bulk Upload 3 - Using Bulk Upload Matches ####
+#### Bulk Upload 2 - Using Bulk Upload Matches ####
 #-------------------------------------------------#
 
 # Only do this next part if Bulk Upload process has completed
@@ -177,9 +165,8 @@ if(nrow(freeLunch) > 0){
 #### PowerSchool Upload based on Lunch Forms ####
 #-----------------------------------------------#
 
-forms.new = forms[!(forms$Student.Number %in% allMatches$Local.ID),] # leave out the ones who are already in allMatches
-# leave out the ones who are already in PowerSchool
-forms.new = forms.new[!(forms.new$Student.Number %in% lunch$StudentID),] 
+forms.new = forms[!(forms$Student.Number %in% allMatches$Local.ID),]     # leave out the ones who are already in allMatches
+forms.new = forms.new[!(forms.new$Student.Number %in% lunch$StudentID),] # leave out the ones who are already in PowerSchool
 if(nrow(forms.new) > 0){
   write.csv(forms.new, paste0(OutFolder, "newFormMatches.csv"))
   print("There are new matches to upload")
@@ -343,7 +330,7 @@ write.csv(LunchByDistrictPrediction, paste0(OutFolder,"LunchByDistrictPrediction
 
 # This is useful for completing the IMF
 # It requires that all FRPL records (from both DCMP and lunch forms) be entered in PowerSchool already.
-x = EnrollExt$SCHOOLEXITDATEENROLLMENTEXITDATE == ""               # which exit dates are missing?
+x = EnrollExt$SCHOOLEXITDATEENROLLMENTEXITDATE == ""                             # which exit dates are missing?
 EnrollExt$SCHOOLEXITDATEENROLLMENTEXITDATE[x] = as.character(schoolYear("end"))  # set missing exit dates to the end of the year
 # convert exit date to date type
 EnrollExt$SCHOOLEXITDATEENROLLMENTEXITDATE = as.Date(EnrollExt$SCHOOLEXITDATEENROLLMENTEXITDATE)
@@ -352,11 +339,11 @@ EnrollExt$SCHOOLENTRYDATEENROLLMENTENTRYDATE = as.Date(EnrollExt$SCHOOLENTRYDATE
 
 y = EnrollExt$SCHOOLENTRYDATEENROLLMENTENTRYDATE < BedsDate()   # which students were around before BEDS day?
 y = y & EnrollExt$SCHOOLEXITDATEENROLLMENTEXITDATE > BedsDate() # which students were around after BEDS day?
-bedsStudents = EnrollExt$StudentID[y]    # Get a vector of ID's of students enrolled on BEDS day
+bedsStudents = EnrollExt$StudentID[y]                           # Get a vector of ID's of students enrolled on BEDS day
 
 # subset lunch services to just students who were enrolled on BEDS day
 bedsLunchServices = lunch[lunch$StudentID %in% bedsStudents,] 
-summary(factor(bedsLunchServices$PROGRAMSCODEPROGRAMSERVICECODE))                    # Summarize the results
+summary(factor(bedsLunchServices$PROGRAMSCODEPROGRAMSERVICECODE))   # Summarize the results
 length(bedsStudents) - nrow(bedsLunchServices)
 
 
@@ -388,9 +375,9 @@ for(i in 1:nrow(wkbkLunch)){
   }
 } # /for
 
-write.csv(wkbkLunch, paste0(Outfolder, "Workbook Lunch Status.csv"))
+write.csv(wkbkLunch, paste0(OutFolder, "Workbook Lunch Status.csv"))
 
-# Go paste the workbook lunch status into the workbook, one tab at a time
+# Go paste the workbook lunch status into the workbook
 
 
 #----------------------------#
@@ -449,9 +436,9 @@ write.csv(CafeList, "list for cafeteria.csv")
 #### SNAP & Medicaid Certified Entry ####
 #---------------------------------------#
 
-oct1 = as.Date(paste0(substr(as.character(BedsDate()), 1, 8), "01"))
+oct1 = Oct1()
 y = EnrollExt$SCHOOLENTRYDATEENROLLMENTENTRYDATE < oct1              # which students were around before october 1?
-septStudents = EnrollExt$StudentID[y]         # Get a vector of ID's of students enrolled before oct 1
+septStudents = EnrollExt$StudentID[y]                                # Get a vector of ID's of students enrolled before oct 1
 
 SnapMedCertEntry = data.frame(StudentNumber = as.character(septStudents), stringsAsFactors = F)
 SnapMedCertEntry$SNAP = F
