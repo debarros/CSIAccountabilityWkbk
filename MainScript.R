@@ -15,7 +15,7 @@ source("functions.R")
 #-------------------------------#
 # Get the most up to date stuff from the actual workbook
 # Note: you must have access to the data drive on the school network
-# This gets used in a bunch of places, including Students.R, Regents.R, and MeritsAndDemerits_2.R
+# This gets used in a bunch of places, including Students.R, Regents.R, Credits.R, HS Data Submission file.R, and MeritsAndDemerits_2.R
 Workbookraw.xlsx = read.xlsx(
   xlsxFile = AcctWkBkLocation,
   sheet = "Data",startRow = 2)
@@ -32,7 +32,8 @@ for(i in dateVars){  Workbook[,i] = xlDate(Workbook[,i]) }
 # Read in student data from powerschool
 # Note: update the data in PowerSchoolAll.xlsx before loading it
 # There is a tab in the file that shows what fields to export
-# This gets used in a bunch of places, such as Students.R, Regents.R, and MathCourseAssignments.R
+# This gets used in a bunch of places, such as Students.R, Regents.R, MathCourseAssignments.R, CheckEnrollments.R
+# This is also required for loading the PowerSchool F2 grades
 powerschoolraw = read.xlsx(xlsxFile = PSLocation, sheet = "Student Table")
 # Format the date variables
 dateVars = c("DistrictEntryDate", "EntryDate", "ExitDate")
@@ -52,7 +53,8 @@ for(i in dateVars){
 #-----------------------------#
 # Export all F2 grades from the storedgrades table in PowerSchool
 # Note: The export will take a really long time
-# This gets used by Credits.R, FromBio.R, MathCourseAssignments.R, MathRegents.T
+# Note: Loading this requires loading the PowerSchool students table first
+# This gets used by Credits.R, FromBio.R, MathCourseAssignments.R, MathRegents.R, Credits.R, HS Data Submission file.R
 F2 = read.xlsx(xlsxFile = PSLocation, sheet = "F2 Grades")
 F2 = F2[F2$`[1]Student_Number` != 0,]
 F2$DateStored = xlDate(F2$DateStored)
@@ -91,13 +93,14 @@ unstoredGrades$Last.Grade.Update = xlDate(unstoredGrades$Last.Grade.Update)
 #### Course-Subject Alignments ####
 #---------------------------------#
 # Sign in to google
-# This gets used by MathRegents.R, MathCourseAssignments.R, and masterSchedule.R (among others)
+# This gets used by MathRegents.R, MathCourseAssignments.R, CheckEnrollments.R, masterSchedule.R, etc
 SWSM(gs_auth()) #this may launch a browser so you can sign into your account
 # Get the course-subject alignments
 CourseSubject = SWSM(gs_url(x = CourseSubjectAddress, lookup = F, visibility = "private"))
 alignment = SWSM(gs_read(ss = CourseSubject, ws = 1, verbose = F))
 alignment2 = SWSM(gs_read(ss = CourseSubject, ws = 2, verbose = F))
 alignment$Course[alignment$Course == "AP Global History I"][1] = "AP Global History I "
+alignment$Course[alignment$Course == "6th Grade Attendance"][1] = "6th Grade Attendance "
 FullAlignment = rbind.data.frame(alignment, alignment2, stringsAsFactors = F)
 
 
@@ -128,8 +131,8 @@ regentsScores = read.xlsx(xlsxFile = PSLocation, sheet = "Regents long")
 #----------------------------#
 #### PowerSchool CC Table ####
 #----------------------------#
-# Load the current term's enrollment records (exported from the cc table in powerschool)
-# This gets used by Level0.R (among others)
+# Load the current year's enrollment records (exported from the cc table in powerschool)
+# This gets used by Level0.R, CheckEnrollments.R, etc
 cc.raw = read.xlsx(xlsxFile = PSLocation, sheet = "cc")
 dateVars = c("DateEnrolled", "DateLeft")
 for(i in dateVars){  cc.raw[,i] = xlDate(cc.raw[,i]) }
@@ -141,7 +144,7 @@ for(i in dateVars){  cc.raw[,i] = xlDate(cc.raw[,i]) }
 #### SIRS Templates ####
 #----------------------#
 # Load all the templates (data dictionaries) for the SIRS exports
-# This gets used by a bunch of scripts, including LunchStatus.R and Level0.R
+# This gets used by a bunch of scripts, including LunchStatus.R, Level0.R, HS Data Submission file.R, etc.
 templates = loadWorkbook(TemplateLocation)
 
 
@@ -151,7 +154,7 @@ templates = loadWorkbook(TemplateLocation)
 #------------------------#
 #### SATs, PSATs, etc ####
 #------------------------#
-# This gets used by PSATScores.R and Level0.R
+# This gets used by PSATScores.R, Level0.R, HS Data Submission file.R
 
 # Load SAT data
 SAT.raw = read.xlsx(xlsxFile = CollegeBoardLocation, 
@@ -205,13 +208,13 @@ attendCodes = read.xlsx(xlsxFile = PSLocation, sheet = "Attendance Codes")
 
 
 
-#--------------------#
-#### Period Codes ####
-#--------------------#
+#-------------------------------#
+#### Period Codes and Lookup ####
+#-------------------------------#
 # Load the table of period codes.  
 # This is an export of the entire Period table in PowerSchool.
 periodCodes = read.xlsx(xlsxFile = PSLocation, sheet = "Periods")
-
+periodLookup = read.xlsx(xlsxFile = PSLocation, sheet = "PeriodLookup")
 
 
 #------------------#
@@ -229,8 +232,16 @@ for(i in dateVars){  attendance[,i] = xlDate(attendance[,i]) }
 #------------------------#
 #### Current Students ####
 #------------------------#
-
 # This gets used in MathCourseAssignments.R and possibly other places
 currentStudents = drive_download(as_id(CurrentStudentsAddress), path = paste0(OutFolder, "currentStudents.csv"), overwrite = T)
 currentStudents = read.csv(paste0(OutFolder, "currentStudents.csv"), stringsAsFactors = F)
 
+
+
+
+
+
+#------------------------------------#
+#### PowerSchool Current Sections ####
+#------------------------------------#
+sections = read.xlsx(xlsxFile = PSLocation, sheet = "Sections")
