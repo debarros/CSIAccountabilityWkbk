@@ -64,8 +64,8 @@ summary(as.factor(studLite$cohort[studLite$FinishedYear & studLite$EnrolledOnBed
 #--------------------------------------#
 
 # look at the Summary By Grad Cohort tab
-# Use column N to get the number in the 4-year grad cohort
-# Use column O to get the number in the 5-year grad cohort
+# Use column K to get the number in the 4-year grad cohort
+# Use column L to get the number in the 5-year grad cohort
 
 # The following line gives the number of students in each cohort who were enrolled at the end of the year
 table(studLite$cohort, studLite$FinishedYear)
@@ -88,13 +88,13 @@ table(studLite$cohort, studLite$FinishedYear)
 # and in the second year cohort who earned at least 10 credits
 # Credits need to be updated in the acct wkbk after summer school
 RegentsEndDate = as.Date("2018-08-17")
-Year1 = Workbook[Workbook$`Cohort.Year.(year.1st.entered.9th)` == 2017,]
+Year1 = Workbook[Workbook$`Cohort.Year.(year.1st.entered.9th)` == 2018,]
 Year1 = Year1[!(VbetterComp(Year1$Date.left.GTH < RegentsEndDate,TRUE)),] # remove students who left before August regents exams
 nrow(Year1)
 sum(Year1$Total.Credits.Earned >= 5)
 mean(Year1$Total.Credits.Earned >= 5)
 
-Year2 = Workbook[Workbook$`Cohort.Year.(year.1st.entered.9th)` == 2016,]
+Year2 = Workbook[Workbook$`Cohort.Year.(year.1st.entered.9th)` == 2017,]
 Year2 = Year2[!(VbetterComp(Year2$Date.left.GTH < RegentsEndDate,TRUE)),]
 nrow(Year2)
 sum(Year2$Total.Credits.Earned >= 10)
