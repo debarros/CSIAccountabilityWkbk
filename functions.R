@@ -18,7 +18,7 @@ CollegeBoardLocation = "\\\\stuthin2/Data/SAT's/college_board_data.xlsx"
 AcctWkBkLocation = "\\\\stuthin2\\Data\\Accountability Spreadsheet\\working copy\\GTH Data Collection Workbook.xlsx"
 
 # Location of the eScholar templates for the SIRS exports
-TemplateLocation = "\\\\stuthin2/Data/SIRS manuals templates guides etc/2018-19eScholarTemplatesNYS_2018-9-25.xlsx"
+TemplateLocation = "\\\\stuthin2/Data/SIRS manuals templates guides etc/2019-20eSCHOLARTEMPLATES-07-26-2019.xlsx"
 
 # URL of the Course-Subject alignment table
 CourseSubjectAddress = "https://docs.google.com/a/greentechhigh.org/spreadsheets/d/17QhVYZkjbx34M6wBvtHUYa_XrRUlRbOtuOsQ4P5l-nk/edit?usp=sharing"
@@ -33,7 +33,7 @@ PSLocation = "PowerSchoolAll.xlsx"
 RDBLocation = "RegentsDB.csv"
 
 # Location of direct cert files from NYSSIS
-LunchLocation = "\\\\stuthin2/data/2018-2019\\lunch"
+LunchLocation = "\\\\stuthin2/data/2019-2020\\lunch"
 
 # Location of output files
 OutFolder = paste0(getwd(), "/Temporary Output/")
