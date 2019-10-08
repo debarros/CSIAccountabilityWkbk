@@ -14,11 +14,11 @@ d1$Course.Name = trimws(d1$Course.Name)
 d1$Course.short = FullAlignment$ShortName[match(d1$Course.Name, FullAlignment$Course)]
 
 # Remove unnecessary courses
-d1 = d1[!(d1$Course.Name %in% c("Independent Study", "Career Internship")),]
+d1 = d1[!(d1$Course.Name %in% c("Independent Study", "Career Internship", "6th Grade Attendance")),]
 
 
 # Remove exited or unnecessary teachers
-d1 = d1[!(d1$Teacher.Name %in% c("Aviza, K","Alcinay, S", "Clairmont, L", "Desrochers, B", "Lowe, D", "McFerran, J", "Mitchell, V", "Polk- Ford, M", "Ramirez, J", "Randle, L", "Remington, T", "Troia, J", "Warring, S")),]
+# d1 = d1[!(d1$Teacher.Name %in% c("Aviza, K","Alcinay, S", "Clairmont, L", "Desrochers, B", "Lowe, D", "McFerran, J", "Mitchell, V", "Polk- Ford, M", "Ramirez, J", "Randle, L", "Remington, T", "Troia, J", "Warring, S")),]
 
 unique(d1$Teacher.Name)
 
@@ -39,18 +39,18 @@ d1$Room[d1$Room == "209B "] = "209B"
 d1$Room[d1$Room == "209A "] = "209A"
 d1$Room[d1$Room == "209C "] = "209C"
 unique(d1$Room)
+# d1$Room[is.na(d1$Room)] = "Unknown"
 
 # Create the period column
-d1$period = d1$Expression
-d1$period[d1$period == "HR(A) "] = "9"
-d1$period = gsub(pattern = "[^[:digit:]]", replacement = "", x = d1$period)
-d1$period[d1$period == "9"] = "A"
-
+d1$period = periodLookup$Period[match(d1$Expression, periodLookup$expression)]
+unique(d1$Expression[is.na(d1$period)])
+unique(d1$period)
+d1$period[d1$period == "Adv"] = "A"
 
 # Split courses that last multiple periods into multiple rows
 addons = d1[c(),]
 for(i in 1:nrow(d1)){
-  if(nchar(d1$period[i]) > 1){
+  if(nchar(d1$period[i]) > 1 & d1$period[i] != "10"){
     x = d1[i,]
     y = d1[i,]
     x$period = substr(d1$period[i],1,1)
@@ -59,7 +59,7 @@ for(i in 1:nrow(d1)){
     addons = rbind(addons,y, stringsAsFactors = F)
   }
 }
-d1 = d1[nchar(d1$period) == 1,]
+d1 = d1[nchar(d1$period) == 1 | d1$period == "10",]
 d1 = rbind(d1, addons, stringsAsFactors = F)
 
 # Find situations where a teacher has two classes in the same period and merge them
@@ -79,7 +79,7 @@ for(i in 1:nrow(doops)){
 d1$entry = paste0(d1$Course.short, "\n", d1$Room)
 d2 = melt(d1[,c("Teacher.Name","period","entry")])
 output = dcast(data = d2, formula = Teacher.Name ~ period, value.var = "entry")
-output = output[,c("Teacher.Name", "A", as.character(1:8))]
+output = output[,c("Teacher.Name", "A", as.character(1:10))]
 output[is.na(output)] = ""
 write.csv(x = output, file = paste0(OutFolder,"mastersched.csv"))
 
@@ -108,7 +108,7 @@ for(i in 1:nrow(doops2)){
 
 # Create the table of Room x Period
 output2 = dcast(data = d3, formula = Room ~ period, value.var = "Teacher.Name")
-output2 = output2[,c("Room", "A", as.character(1:8))]
+output2 = output2[,c("Room", "A", as.character(1:10))]
 output2[is.na(output2)] = ""
 write.csv(x = output2, file = paste0(OutFolder,"mastersched2.csv"))
 
