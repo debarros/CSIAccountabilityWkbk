@@ -6,6 +6,9 @@
 
 # Get the advisory portion of the cc table (for students missing race and ethnicity)
 cc.adv = cc.raw[grepl("Advisory", cc.raw$`[02]course_name`, T),]
+cc.adv = cc.adv[order(cc.adv$DateEnrolled, decreasing = T),]
+cc.adv = cc.adv[!duplicated(cc.adv$`[01]Student_Number`),]
+
 
 # Load the demographics file produced by PowerSchool
 demographics = read.csv(file.choose(), header = F, stringsAsFactors = F)
@@ -20,7 +23,7 @@ demographics = DFna.to.empty(demographics)              # make blank spaces blan
 
 gradelevels = demographics$CURRENTGRADELEVELGRADELEVEL  # grab grade levels
 gradelevels = as.character(gradelevels)                 # make Grade Level character to preserve 0's
-gradelevels[nchar(gradelevels) == 1] = "09"             # change single-digit grade levels to "09"
+gradelevels[nchar(gradelevels) == 1] = paste0("0",gradelevels[nchar(gradelevels) == 1])             # left pad single digit grade levels
 demographics$CURRENTGRADELEVELGRADELEVEL = gradelevels  # put grade levels back in
 
 demographics$GUIDANCECOUNSELORDISTRICTCODE = ""         # remove the guidance counselor codes
@@ -49,6 +52,8 @@ if(any(races == "")){                                   # Check for students mis
 write.SIRS(demographics, paste0(OutFolder, "demographics.csv"))    # output
 
 str(demographics)
+
+View(demographics[demographics$RACE2CODE == "N",])
 
 #------------------#
 #### Enrollment ####
