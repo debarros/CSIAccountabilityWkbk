@@ -2,6 +2,9 @@
 
 # This takes info from the application trackers, does some checks and validation, and produces import files
 # It is used for importing new students into PowerSchool
+# Note: In the application trackers, all fields should be formatted as character
+
+ps = powerschoolraw
 
 
 #---------------------------------------------------#
@@ -9,16 +12,16 @@
 #---------------------------------------------------#
 
 # This will need to be updated every year with the URLs of the trackers.
-HS.address = "https://docs.google.com/spreadsheets/d/14uv-akqxoghRuQFMEhOB0wmTffaxnGRs6Yo5GM6ZHYE/edit?usp=sharing"
-MS.address = "https://docs.google.com/spreadsheets/d/192PEJp4ft4kukvLt6UgjX9Qs5rNrV1UQXaanrHtQvU0/edit?usp=sharing"
+HS.address = "https://docs.google.com/spreadsheets/d/1EVSo1m7eiNGPgjEhVYgl6YC1ldpLKWMSq0HDM_pnzxY/edit?usp=sharing"
+MS.address = "https://docs.google.com/spreadsheets/d/1XPDV0tp0yRxLC_FCMF2P7Mp08elXoR64og8Pc-TZoPw/edit?usp=sharing"
 
-HS.sheet = SWSM(gs_url(HS.address, verbose = F))                                       # identify the sheet
-HS.appSheet = gs_read(ss = HS.sheet, ws = "Tracker", range = "A2:DC300", verbose = F)  # read it
-HS.appSheet = HS.appSheet[!is.na(HS.appSheet$Status),]                                 # remove unnecessary rows
+HS.sheet = SWSM(as_sheets_id(HS.address, verbose = T))                          # identify the sheet
+HS.appSheet = read_sheet(ss = HS.sheet, sheet = "Tracker", range = "A2:DC300")  # read it
+HS.appSheet = HS.appSheet[!is.na(HS.appSheet$Status),]                          # remove unnecessary rows
 
-MS.sheet = SWSM(gs_url(MS.address, verbose = F))                                       # identify the sheet      
-MS.appSheet = gs_read(ss = MS.sheet, ws = "Tracker", range = "A2:DC300", verbose = F)  # read it
-MS.appSheet = MS.appSheet[!is.na(MS.appSheet$Status),]                                 # remove unnecessary rows
+MS.sheet = SWSM(as_sheets_id(MS.address, verbose = F))                          # identify the sheet      
+MS.appSheet = read_sheet(ss = MS.sheet, sheet = "Tracker", range = "A2:DC300")  # read it
+MS.appSheet = MS.appSheet[!is.na(MS.appSheet$Status),]                          # remove unnecessary rows
 
 # Combine address fields to create FullAddress
 MS.appSheet$FullAddress = paste0(MS.appSheet$Address, ", ", MS.appSheet$City, ", ", "NY", " ", MS.appSheet$Zip)
@@ -35,10 +38,16 @@ HS.appSheet$CensusDistrict = ""
 
 
 # This pulls from old trackers.  It will need to be updated every year with the URLs of last year's trackers.
+# This should be put in the form of a list so it can be looped
+url1920hs = "https://docs.google.com/spreadsheets/d/14uv-akqxoghRuQFMEhOB0wmTffaxnGRs6Yo5GM6ZHYE/edit?usp=sharing"
+url1920ms = "https://docs.google.com/spreadsheets/d/192PEJp4ft4kukvLt6UgjX9Qs5rNrV1UQXaanrHtQvU0/edit?usp=sharing"
 url1819 = "https://docs.google.com/spreadsheets/d/18ida9wqcgxzyT8j5N2pfKsjYCIEBa7hwgxX_nn7HmK8/edit?usp=sharing"
 url1718 = "https://docs.google.com/spreadsheets/d/1mLuUQIFArmhvUMCYG0JciOZbeckvindxCloSj_q93TE/edit?usp=sharing"
-apsheet1819 = gs_read(ss = gs_url(x = url1819, verbose = F), ws = "Tracker", range = "A2:AA300", verbose = F)
-apsheet1718 = gs_read(ss = gs_url(x = url1718, verbose = F), ws = "Tracker", range = "A2:AA300", verbose = F)
+
+apsheet1920hs = read_sheet(ss = as_sheets_id(x = url1920hs, verbose = F), sheet = "Tracker", range = "A2:AA300")
+apsheet1920ms = read_sheet(ss = as_sheets_id(x = url1920ms, verbose = F), sheet = "Tracker", range = "A2:AA300")
+apsheet1819 = read_sheet(ss = as_sheets_id(x = url1819, verbose = F), sheet = "Tracker", range = "A2:AA300")
+apsheet1718 = read_sheet(ss = as_sheets_id(x = url1718, verbose = F), sheet = "Tracker", range = "A2:AA300")
 
 
 
@@ -58,9 +67,11 @@ fullNames = toupper(fullNames)
 
 # Use the Workbook, PowerSchool, and past Application Trackers to get full names of students who already have IDs
 existingFullNames = c(paste0(Workbook$Last.Name, ", ", Workbook$First.Name), 
-                      powerschoolraw$lastfirst, 
+                      ps$lastfirst, 
                       paste0(apsheet1819$`Student's Last Name`, ", ", apsheet1819$`Student's First Name`),
-                      paste0(apsheet1718$`Student's Last Name`, ", ", apsheet1718$`Student's First Name`))
+                      paste0(apsheet1718$`Student's Last Name`, ", ", apsheet1718$`Student's First Name`),
+                      paste0(apsheet1920hs$`Student's Last Name`, ", ", apsheet1920hs$`Student's First Name`),
+                      paste0(apsheet1920ms$`Student's Last Name`, ", ", apsheet1920ms$`Student's First Name`))
 existingFullNames = gsub(pattern = "\\W", replacement = "", x = existingFullNames)
 existingFullNames = toupper(existingFullNames)
 existingFullNames = existingFullNames[!duplicated(existingFullNames)]
@@ -76,7 +87,7 @@ for(i in 1:length(fullNames)){
     print("")
   }
 }
-
+# For each of those students, go see if there are a prior student or applicant.  If so, make sure they have the same ID.
 
 
 
@@ -129,7 +140,7 @@ for(i in 1:nrow(MS.appSheet)){
 }
 
 # Test an address using the next line
-# getSchoolDistrict("10 W. Sunnyside Street, Troy, NY 12180", halt = F)
+# getSchoolDistrict(addr = "814 N Manning Blvd, Albany, NY 12207", halt = F)
 
 
 
@@ -138,18 +149,25 @@ for(i in 1:nrow(MS.appSheet)){
 #----------------------------------------------------------#
 
 HS.appSheet$CenDistShort = substr(HS.appSheet$CensusDistrict, 1, 20)
-table(as.data.frame(HS.appSheet[,c("CenDistShort", "DOR Name")]), useNA = "ifany")
+x = table(as.data.frame(HS.appSheet[,c("CenDistShort", "DOR Name")]), useNA = "ifany")
+x = as.data.frame(x)
+x = x[x$Freq > 0,]
+x = x[order(x$Freq, decreasing = T),]
+x
 
 MS.appSheet$CenDistShort = substr(MS.appSheet$CensusDistrict, 1, 20)
-table(as.data.frame(MS.appSheet[,c("CenDistShort", "DOR Name")]), useNA = "ifany")
-
+x = table(as.data.frame(MS.appSheet[,c("CenDistShort", "DOR Name")]), useNA = "ifany")
+x = as.data.frame(x)
+x = x[x$Freq > 0,]
+x = x[order(x$Freq, decreasing = T),]
+x
 
 
 #----------------------------------------------------------#
 #### Generate output for the addresses that didn't work ####
 #----------------------------------------------------------#
 
-DORlookup = SWSM(gs_read(ss = HS.sheet, ws = "Lists", range = "C2:F32", verbose = F))  # Get a table to look up the DOR name
+DORlookup = SWSM(read_sheet(ss = HS.sheet, sheet = "Lists", range = "C2:F32"))  # Get a table to look up the DOR name
 cols2use = c("Student ID", "FullAddress", "FullAddress2", "CensusDistrict", "DOR2")
 newCols = c("Student ID", "FullAddress", "FullAddress2", "AccordingToCensusUsingAddress", "AccordingToTracker")
 
@@ -178,20 +196,36 @@ write.csv(x = appSheet.limited, file = paste0(OutFolder,"MS school district erro
 
 statuses2use = c("Applying", "Applied", "Conditionally accepted", "Accepted", "Enrolled", "Wait Listed", "Conditionally Wait Listed")
 
-keepCols = intersect(colnames(HS.appSheet), colnames(MS.appSheet))
+keepCols = intersect(colnames(HS.appSheet), colnames(MS.appSheet)) # all columns to use
 
-combined.appSheet = rbind(HS.appSheet[,keepCols], MS.appSheet[,keepCols])
-unique(combined.appSheet$Status)
+# adjust the data.frames so that their structures match
+HS.appSheet.keep = HS.appSheet[,keepCols]                          
+MS.appSheet.keep = MS.appSheet[,keepCols]
 
-importable = as.data.frame(combined.appSheet[combined.appSheet$Status %in% statuses2use,])
-rownames(importable) = NULL
-importable$RepeaterFlag = toupper(importable$`Repeater?`) == "YES"
+# Determine the data type of every column
+x = character(0)
+y = character(0)
+for(i in 1:length(keepCols)){
+  x = c(x, class(unlist(HS.appSheet.keep[,i])))
+  y = c(y, class(unlist(MS.appSheet.keep[,i])))
+}
 
+keepCols[which(x != y)] # when do the data types not match?
+unique(c(x,y))          # what are all the different data types?  Should just be character and logical
+
+
+combined.appSheet = rbind(HS.appSheet.keep, MS.appSheet.keep)                              # merge the data.frames
+importable = as.data.frame(combined.appSheet[combined.appSheet$Status %in% statuses2use,]) # limit to the statuses that we are using for importing
+rownames(importable) = NULL                                                                # remove row names
+importable$RepeaterFlag = toupper(importable$`Repeater?`) == "YES"                         # make a logical repeated flag
+
+# Count the number of races for each student
 importable$racecount = 0
 for(i in 1:nrow(importable)){
   importable$racecount[i] = 5 - sum(is.na(importable[i,c("Black?", "White?", "Asian?", "Native American?", "Pacific Islander?")]))
 }
 
+# Set the overall race/ethnicity for each student
 importable$Ethnicity = ""
 importable$Ethnicity[VbetterComp(importable$`Black?`, "Y")] = "B"
 importable$Ethnicity[VbetterComp(importable$`White?`, "Y")] = "W"
@@ -231,10 +265,15 @@ imp.Stu$DOB = DOBs
 if(any(is.na(imp.Stu$DOB))){
   print("Uh oh!  There are students with missing or bad DOBs.")
   print(imp.Stu[is.na(imp.Stu$DOB), c("Student_Number", "Last_Name", "First_Name")])
+} else {
+  print("DOBs look fine."
+  )
 }
 
 # Set the grade level, address, and DOR
-imp.Stu$Grade_Level = importable$`Grade Applying For`  
+imp.Stu$Grade_Level = importable$`Grade Applying For`
+imp.Stu$SchoolEntryGradeLevel = imp.Stu$Grade_Level
+imp.Stu$DistrictEntryGradeLevel = imp.Stu$Grade_Level
 imp.Stu$Street = importable$Address
 imp.Stu$City = importable$City
 imp.Stu$Zip = importable$Zip
@@ -249,35 +288,51 @@ imp.Stu$FedEthnicity = hispanic
 
 # Set the gender, status, entry date and code, exit date, transfer comment and school id
 imp.Stu$Gender = "M"
-imp.Stu$Enroll_Status = "0"
+imp.Stu$Enroll_Status = "-1"                                              # -1 indicates pre-registered.  Use 0 for active.
 imp.Stu$EntryCode = "0011"
-imp.Stu$EntryDate = "08/20/2019"                                          # Update each year
-imp.Stu$ExitDate = "06/29/2020"                                           # Update each year
+imp.Stu$EntryDate = "08/20/2020"                                          # Update each year
+imp.Stu$SchoolEntryDate = imp.Stu$EntryDate
+imp.Stu$DistrictEntryDate = imp.Stu$EntryDate
+imp.Stu$ExitDate = "06/29/2021"                                           # Update each year
 imp.Stu$TransferComment = paste0("Enrolled Fall ", schoolYear())
-imp.Stu$SchoolEntryDate = "08/20/2019"                                    # Update each year
+
 imp.Stu$SchoolID = "100860907"
+imp.Stu$SchoolID[as.integer(imp.Stu$Grade_Level) < 9] = "200"
+
 imp.Stu$Enrollment_SchoolID = "100860907"
+imp.Stu$Enrollment_SchoolID[as.integer(imp.Stu$Grade_Level) < 9] = "200"
+
 imp.Stu$Next_School = "100860907"
+imp.Stu$Next_School[as.integer(imp.Stu$Grade_Level) < 8] = "200"
+
 
 #Set a bunch more info
 imp.Stu$Sched_Scheduled = "1"
-imp.Stu$Sched_YearOfGraduation = schoolYear() + 13 - imp.Stu$Grade_Level  
-imp.Stu$Sched_NextYearGrade = imp.Stu$Grade_Level + 1
+imp.Stu$Sched_YearOfGraduation = schoolYear() + 13 - as.integer(imp.Stu$Grade_Level)
+
+imp.Stu$Sched_NextYearGrade = as.integer(imp.Stu$Grade_Level) + 1
+
+
 imp.Stu$Ethnicity = importable$Ethnicity
-imp.Stu$SchoolEntryGradeLevel = imp.Stu$Grade_Level
 imp.Stu$Track = "A"
 imp.Stu$Mailing_City = imp.Stu$City
 imp.Stu$Mailing_State = imp.Stu$State
 imp.Stu$Mailing_Street = imp.Stu$Street
 imp.Stu$Mailing_Zip = imp.Stu$Zip
-imp.Stu$Lunch_ID = substr(imp.Stu$Student_Number, 5, 9)
-imp.Stu$S_NY_STU_X.DateOfEntryGrade9 = "08/20/2019"                       # Update each year
-imp.Stu$S_NY_STU_X.DateOfEntryGrade9[imp.Stu$Grade_Level != 9] = ""
+imp.Stu$Lunch_ID = substr(imp.Stu$Student_Number, 5, 9) 
+imp.Stu$S_NY_STU_X.DateOfEntryGrade9 = "08/20/2020"                         # Update each year
+imp.Stu$S_NY_STU_X.DateOfEntryGrade9[imp.Stu$Grade_Level != "9"] = ""
 imp.Stu$S_NY_STU_X.DateOfEntryGrade9[imp.Stu$RepeaterFlag] = ""
-imp.Stu$FTEID = 502                                                       # Update each yeach
+imp.Stu$FTEID = 552                                                         # Update each year
+imp.Stu$FTEID[as.integer(imp.Stu$Grade_Level) < 9] = 554                    # Update each year
 
 write.psimport(x = imp.Stu, file = paste0(OutFolder, "StudentImport.txt"))
+imp.Stu.new = imp.Stu[!(imp.Stu$Student_Number %in% ps$student_number),]
+write.psimport(x = imp.Stu.new, file = paste0(OutFolder, "StudentImport_new.txt"))
+write.psimport(x = imp.Stu.new[imp.Stu.new$Enrollment_SchoolID == "100860907",], file = paste0(OutFolder, "StudentImport_new_HS.txt"))
+write.psimport(x = imp.Stu.new[imp.Stu.new$Enrollment_SchoolID == "200",], file = paste0(OutFolder, "StudentImport_new_MS.txt"))
 
+# Now go import that file into PowerSchool.  I believe this is done using Quick Import into the Students table.
 
 
 #------------------------------------------------------------------#
@@ -290,7 +345,7 @@ write.psimport(x = imp.Stu, file = paste0(OutFolder, "StudentImport.txt"))
 
 raceColumns = c("Black?", "White?", "Asian?", "Native American?", "Pacific Islander?")
 imp.Race = importable[,c("Student ID", raceColumns)]
-imp.Race$StudentID = powerschoolraw$ID[match(imp.Race$`Student ID`, powerschoolraw$student_number)]
+imp.Race$StudentID = ps$ID[match(imp.Race$`Student ID`, ps$student_number)]
 
 if(nrow(imp.Race[is.na(imp.Race$StudentID),]) > 0){
   print("Warning!  There are importable students in the tracker who are not in PowerSchool!")
@@ -313,23 +368,32 @@ imp.Race = imp.Race[,c("StudentID", "RaceCd")]
 
 write.psimport(x = imp.Race, file = paste0(OutFolder, "RaceImport.txt"))
 
-
+# Now go import that into PowerSchool.  I believe this has to be imported using the Quick Import function.
 
 
 #---------------------------------------------------------------#
 #### Make the flat file to import into the PS Contacts table ####
 #---------------------------------------------------------------#
 
-# This next section needs to be rewritten.  It should not pull the powerschoolraw$ID values.
+
 stu.importable = importable
-# stu.importable$StudentID = powerschoolraw$ID[match(stu.importable$`Student ID`, powerschoolraw$student_number)]
-if(nrow(stu.importable[is.na(stu.importable$StudentID),]) > 0){
+stu.importable$inPS = stu.importable$`Student ID` %in% ps$student_number
+if(any(!stu.importable$inPS)){
   print("Warning!  There are stu.importable students in the tracker who are not in PowerSchool!")
   print("")
-  print(stu.importable[is.na(stu.importable$StudentID),])
+  print(stu.importable[!(stu.importable$inPS),])
 }
-stu.importable = stu.importable[!is.na(stu.importable$StudentID),] # remove rows for students not in PowerSchool
-#
+stu.importable = stu.importable[stu.importable$inPS,] # remove rows for students not in PowerSchool
+
+
+
+# If there are any contacts that completely lack info, drop them
+stu.importable$NoContact = F
+for(i in 1:nrow(stu.importable)){
+  stu.importable$NoContact[i] = all(is.na(stu.importable[i,c("Prefix 1", "First name 1", "Middle name 1", "Last name 1", "Prefix 2", "First name 2", "Middle name 2", "Last name 2")]))
+}
+stu.importable = stu.importable[!(stu.importable$NoContact),]
+stu.importable$NoContact = NULL
 
 
 stu.importable$contactLivesWith1 = "1"
@@ -341,8 +405,10 @@ stu.importable$addressPriorityOrder2[!is.na(stu.importable$`Address 2`)] = "1"
 stu.importable$addressPriorityOrder2[stu.importable$`Address 2` == ""] = ""
 
 
+
+
 # Split the data into two tables, one for each contact column set
-set1Vars = c("StudentID",
+set1Vars = c("Student ID",
              "Prefix 1", "First name 1", "Middle name 1", "Last name 1",
              "Gender 1",
              "Email address 1",
@@ -353,7 +419,7 @@ set1Vars = c("StudentID",
              "Address", "City", "Zip", "addressPriorityOrder1",
              "contactLivesWith1")
 
-set2Vars = c("StudentID",
+set2Vars = c("Student ID",
              "Prefix 2", "First name 2", "Middle name 2", "Last name 2",
              "Gender 2",
              "Email address 2", 
@@ -366,6 +432,7 @@ set2Vars = c("StudentID",
              "Mail to address 2 also?",
              "Parent 2 also has custody?",
              "Parent 2 can pick up student from school?")
+
 
 set1 = stu.importable[,c(set1Vars)] # 1st parent/guardian
 set2 = stu.importable[,c(set2Vars)] # 2nd parent/guardian
@@ -385,7 +452,7 @@ p2Cols = c("p2Num", "p2Ext", "p2Type", "p2Pref", "p2Text")
 p3Cols = c("p3Num", "p3Ext", "p3Type", "p3Pref", "p3Text")
 
 # Set the column names in the two data sets so they can be merged later
-newColNames = c("StudentID", 
+newColNames = c("Student ID", 
                 "Prefix", "First", "Middle", "Last", 
                 "Gender",
                 "Email", 
@@ -421,11 +488,13 @@ ContactName = paste0(setcombo$First," ",setcombo$Last)
 if(sum(duplicated(ContactName)) > 0){
   print(paste0("There are duplicate parents.  You will have to deal with that.  Here are the names:"))
   print(ContactName[duplicated(ContactName)])
-  write.csv(x = ContactName[duplicated(ContactName)], file = "Duplicate Contacts to Merge.csv")
+  write.csv(x = ContactName[duplicated(ContactName)], file = paste0(OutFolder,"Duplicate Contacts to Merge.csv"))
   print("They are also in a file.  Merge them after the import.")
 } else {
   print("Yay! No duplicate contact names.")
 }
+
+setcombo[is.na(setcombo$First),]
 
 # Set unique identifiers for each contact
 setcombo$identifier = 1:nrow(setcombo)
@@ -441,9 +510,9 @@ colnames(row3) = colnames(row1)
 
 
 # There are some elements that don't get repeated when a particular contact has multiple lines for multiple phone numbers
-dropvars = c("StudentID", "Prefix", "First", "Middle", "Last", "Gender", 
+dropvars = c("Student ID", "Prefix", "First", "Middle", "Last", "Gender", 
              "Email", "Relationship", "Address", "City", "Zip", "addressPriorityOrder", "contactLivesWith", 
-             "getmail", "hascustody", "canpickup", "isActive")
+             "getmail", "hascustody", "canpickup", "isActive", "isEmergencyContact")
 row2[,dropvars] = NA
 row3[,dropvars] = NA
 
@@ -465,6 +534,11 @@ if(length(duplicateNumbers) > 0){
 } else {
   print("Yay! No duplicate contact phone numbers.")
 }
+
+
+
+# Need code here to validate email addresses
+
 
 # Set some more values for all contacts
 setcombo2$emailType[!is.na(setcombo2$Email)] = "Current"
@@ -593,10 +667,9 @@ imp.Contact$prefix[imp.Contact$prefix == "Ms"] = "Ms."
 imp.Contact$prefix[imp.Contact$prefix == "Mr"] = "Mr."
 imp.Contact$prefix[imp.Contact$prefix == "Mrs"] = "Mrs."
 
-# Use the actual student number instead of the ID field from the Students table
-imp.Contact$studentNumber = powerschoolraw$student_number[match(imp.Contact$studentNumber, powerschoolraw$ID)]
-imp.Contact$studentNumber[is.na(imp.Contact$studentNumber)] = ""
-
 # Since you are going to use the import manager, set type to "manager"
 write.psimport(x = imp.Contact, file = paste0(OutFolder, "ContactsImport.txt"), type = "manager")
+
+
+# I believe this has to be imported using the Data Import Manager.
 
