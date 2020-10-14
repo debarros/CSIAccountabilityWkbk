@@ -59,6 +59,43 @@ View(demographics[demographics$RACE2CODE == "N",])
 #### Enrollment ####
 #------------------#
 
+enrollment = read.csv(file.choose(), stringsAsFactors = F)
+colnames(enrollment) = GetNiceColumnNames("SCHOOL ENTRY EXIT", templates)
+enrollment$SCHOOLENTRYTYPECODEREASONFORBEGINNINGENROLLMENTCODE = "0011"
+toFix = enrollment$SCHOOLEXITDATEENROLLMENTEXITDATE == "2021-06-29" & is.na(enrollment$SCHOOLEXITTYPECODEREASONFORENDINGENROLLMENTCODE)
+enrollment$SCHOOLEXITDATEENROLLMENTEXITDATE[toFix] = ""
+enrollment = DFna.to.empty(enrollment)
+gradelevels = enrollment$ENROLLMENTGRADELEVELGRADELEVEL  # grab grade levels
+gradelevels = as.character(gradelevels)                 # make Grade Level character to preserve 0's
+gradelevels[nchar(gradelevels) == 1] = paste0("0",gradelevels[nchar(gradelevels) == 1])             # left pad single digit grade levels
+enrollment$ENROLLMENTGRADELEVELGRADELEVEL = gradelevels  # put grade levels back in
+write.SIRS(enrollment, paste0(OutFolder, "enrollment.csv"))
+
+
+graduates = demographics$STUDENTIDSCHOOLDISTRICTSTUDENTID[demographics$DIPLOMATYPECODECREDENTIALTYPECODE != ""]
+oldEnroll = read.csv(file.choose(), stringsAsFactors = F)
+
+colnames(oldEnroll) = GetNiceColumnNames("SCHOOL ENTRY EXIT", templates)
+str(enrollment)
+View(enrollment[enrollment$STUDENTIDSCHOOLDISTRICTSTUDENTID %in% graduates,])
+enrollment$SCHOOLENTRYTYPECODEREASONFORBEGINNINGENROLLMENTCODE = "0011"
+toFix = which(enrollment$SCHOOLEXITDATEENROLLMENTEXITDATE == "" & enrollment$STUDENTIDSCHOOLDISTRICTSTUDENTID %in% graduates)
+enrollment$SCHOOLEXITDATEENROLLMENTEXITDATE[toFix] = "2020-06-29"
+enrollment$SCHOOLEXITTYPECODEREASONFORENDINGENROLLMENTCODE[toFix] = "799"
+
+gradelevels = enrollment$ENROLLMENTGRADELEVELGRADELEVEL  # grab grade levels
+gradelevels = as.character(gradelevels)                 # make Grade Level character to preserve 0's
+gradelevels[nchar(gradelevels) == 1] = paste0("0",gradelevels[nchar(gradelevels) == 1])             # left pad single digit grade levels
+enrollment$ENROLLMENTGRADELEVELGRADELEVEL = gradelevels  # put grade levels back in
+
+enrollment = DFna.to.empty(enrollment)
+
+enrollment[enrollment$STUDENTIDSCHOOLDISTRICTSTUDENTID == "151610258",]
+sort(enrollment$STUDENTIDSCHOOLDISTRICTSTUDENTID)
+
+oldEnroll[oldEnroll$STUDENTIDSCHOOLDISTRICTSTUDENTID == 151610258,]
+
+write.SIRS(enrollment, paste0(OutFolder, "enrollment.csv"))
 
 #------------------------#
 #### Program Services ####
@@ -100,7 +137,7 @@ unique(demographics$DIPLOMATYPECODECREDENTIALTYPECODE)
 
 demographics[which(demographics$DiplomaTypeCode == 762),]
 
-demographics$StudentId[!is.na(demographics$DiplomaTypeCode)]
+demographics$STUDENTIDSCHOOLDISTRICTSTUDENTID[!is.na(demographics$DIPLOMATYPECODECREDENTIALTYPECODE)]
 
 
 
@@ -138,3 +175,17 @@ summary(as.factor(SCGD$POSTSECONDARYCREDITUNITS), )
 
 write.SIRS(SCGD, file = paste0(OutFolder,"SCGD.csv"))                       # Output the file
 
+
+
+
+#------------------------------------#
+#### Course Instructor Assignment ####
+#------------------------------------#
+
+
+CIA = read.csv(file.choose(), stringsAsFactors = F)
+colnames(CIA) = GetNiceColumnNames("COURSE INSTRUCTOR ASSIGNMENT", templates)
+
+
+
+str(CIA)
