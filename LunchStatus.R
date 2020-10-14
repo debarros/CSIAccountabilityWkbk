@@ -123,10 +123,37 @@ write.csv(x = StudentLiteExtract[unmatchedIDs, 4:8], file = paste0(OutFolder,"un
 # Get set of students for new upload
 newmatches = allMatches[!(allMatches$Local.ID %in% lunch$StudentID),]
 if(nrow(newmatches) > 0){
-  print("see the newmatches.csv file")
-  print("Use the program service upload template to import these into PowerSchool.")
-  print("For the eligibility code, use 'DCMP'.")
-  write.csv(newmatches, paste0(OutFolder,"newmatches.csv"))
+  newmatches.output = data.frame(Student_Number = newmatches$Local.ID)
+  newmatches.output$ProgramServiceCode = "5817"
+  newmatches.output$ProgramServiceCategory = "OTHER"
+  newmatches.output$BeginningDate = powerschool$EntryDate[match(newmatches.output$Student_Number, powerschool$student_number)]
+  newmatches.output$BeginningDate = format(newmatches.output$BeginningDate, "%m/%d/%Y")
+  newmatches.output$EndingDate = powerschool$ExitDate[match(newmatches.output$Student_Number, powerschool$student_number)]
+  newmatches.output$EndingDate = format(newmatches.output$EndingDate, "%m/%d/%Y")
+  newmatches.output$CTETechPrepCategory = ""
+  newmatches.output$ProgramIntensity = ""
+  newmatches.output$ExitReasonCode = ""
+  newmatches.output$ParticipationInfoCode = ""
+  newmatches.output$StateLocationID = ""
+  newmatches.output$Created_By = "pdbarros"
+  newmatches.output$ProgramServiceLevel = "D"
+  newmatches.output$SchoolID = "100860907"
+  newmatches.output$PROGRAMELIGIBILITYCODE1 = "DCMP"
+  newmatches.output$PROGRAMELIGIBILITYCODE2 = ""
+  newmatches.output$PROGRAMELIGIBILITYCODE3 = ""
+  newmatches.output$PROGRAMELIGIBILITYCODE4 = ""
+  newmatches.output$PROGRAMELIGIBILITYCODE5 = ""
+  newmatches.output$NIGHTTIMERESIDENCE = ""
+  
+  newmatches.poverty = newmatches.output
+  newmatches.poverty$ProgramServiceCode = "0198"
+  newmatches.poverty$PROGRAMELIGIBILITYCODE1 = ""
+  
+  newmatches.output = rbind.data.frame(newmatches.output, newmatches.poverty)
+  
+  print("see the newmatches.csv file.  It will need to be imported into PowerSchool.")
+  print("Special Functions > importing and Exporting > NY Student Program Service Import")
+  write.table(newmatches.output, paste0(OutFolder,"newmatches.csv"), quote = F, row.names = F, col.names = T, sep = "," , dec = ".")
 } else {
   print("There are no new matches to upload to PowerSchool")
 } # /if-else
