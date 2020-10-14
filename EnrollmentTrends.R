@@ -6,6 +6,7 @@
 
 # Remove those who never attended
 Workbook = Workbook[!(VbetterComp(Workbook$Discharge.Reason, "never attended")),]
+Workbook = Workbook[order(Workbook$`Cohort.Year.(year.1st.entered.9th)`),]
 rownames(Workbook) = NULL
 
 # Create the entry date variable
@@ -76,7 +77,7 @@ p5 = ggplot(GraphData, aes(x=adjustedDate, y=count, color=year)) +
   geom_point(size = 1, alpha = .2)  +
   labs(y = "Number of Students", x = "Date", 
        title = "Total Enrollment Over Each Year") + 
-  coord_cartesian(ylim = c(320, 380)) +
+  coord_cartesian(ylim = c(300, 380)) +
   scale_x_date(labels = date_format("%b"), 
                date_breaks='1 month') +
   scale_colour_hue(l = 50) +                          # Use a slightly darker palette than normal
@@ -99,7 +100,7 @@ enr_lng = melt(yrEnroll, id = "dates")
 colnames(enr_lng)[2] = "Cohort"
 
 # Remove early cohorts
-enr_lng = enr_lng[!(enr_lng$Cohort %in% c("c2006","c2007")),]
+enr_lng = enr_lng[!(enr_lng$Cohort %in% c("c2006","c2007", "c2008", "c2009")),]
 
 # For each cohort, remove entries prior to August 30th of that year (because that data is suspect)
 for(i in cohortSet){
