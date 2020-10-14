@@ -38,7 +38,7 @@ crosswalk = read.xlsx(
 # Make a copy of the workbook.  This will become the output.
 submittable = Workbook
 
-# Fix cohort inclusion stuff (in case the workbook has already been updated with students who transfered out after EOY)
+# Fix cohort inclusion stuff (in case the workbook has already been updated with students who transferred out after EOY)
 for(i in 1:nrow(submittable)){
   if(!is.na(submittable$Date.left.GTH[i])){                # If the student left
     if(submittable$Date.left.GTH[i] > lastDay){            # If they left after the last day of the school year
@@ -89,11 +89,11 @@ for(i in 1:nrow(submittable)){
 } # /for
 
 
-# Fix the column names using the crosswalk, then remove uneccesary columns and add blank ones
+# Fix the column names using the crosswalk, then remove unnecessary columns and add blank ones
 columnNames = colnames(submittable)
 for(i in 1:length(columnNames)){
   if(columnNames[i] %in% crosswalk$Old.Format.as.read.by.R){
-    x = crosswalk$September.2019.Format[VbetterComp(crosswalk$Old.Format.as.read.by.R, columnNames[i])]
+    x = crosswalk$September.2020.Format[VbetterComp(crosswalk$Old.Format.as.read.by.R, columnNames[i])]
     if(length(x) != 1) {
       print(i)
       print(x)
@@ -102,8 +102,8 @@ for(i in 1:length(columnNames)){
   }
 }
 colnames(submittable) = columnNames
-submittable = submittable[,columnNames %in% crosswalk$September.2019.Format]
-moreColumns = setdiff(crosswalk$September.2019.Format, columnNames)
+submittable = submittable[,columnNames %in% crosswalk$September.2020.Format]
+moreColumns = setdiff(crosswalk$September.2020.Format, columnNames)
 submittable[,moreColumns] = NA
 
 
@@ -316,7 +316,7 @@ table(output$`Cohort Year`, output$`Included in Accountability Cohort`) # This i
 #--------------------------------------------------------------------#
 
 output.gradcohort$Graduated = output.gradcohort$`Discharge Reason` == "Graduated"
-output.gradcohort$Missing = (!output.gradcohort$Graduated) & (output.gradcohort$`Still Enrolled as of August 2017?` == "no")
+output.gradcohort$Missing = (!output.gradcohort$Graduated) & (output.gradcohort$`Still Enrolled as of August 2019?` == "no")
 output.gradcohort$Status = "Enrolled"
 output.gradcohort$Status[output.gradcohort$Missing] = "Missing"
 output.gradcohort$Status[output.gradcohort$Graduated] = "Graduated"
@@ -328,8 +328,8 @@ table(output.gradcohort$`Cohort Year`, output.gradcohort$Status)
 #### APPR Table - Percent of Students in 1st & 2nd Year Cohort Earning Reqd Credits  ####
 #---------------------------------------------------------------------------------------#
 # Promotion
-output.gradcohort$cred5 = output.gradcohort$`Number of Credits Earned as of August 2018 ` >= 5
-output.gradcohort$cred10 = output.gradcohort$`Number of Credits Earned as of August 2018 ` >= 10
+output.gradcohort$cred5 = output.gradcohort$`Number of Credits Earned as of August 2019` >= 5
+output.gradcohort$cred10 = output.gradcohort$`Number of Credits Earned as of August 2019` >= 10
 promotion = as.data.frame.matrix(table(output.gradcohort$`Cohort Year`, output.gradcohort$cred5))
 promotion = cbind.data.frame(promotion, as.data.frame.matrix(table(output.gradcohort$`Cohort Year`, output.gradcohort$cred10)))
 colnames(promotion) = c("Not5", "Earned5", "Not10", "Earned10")
@@ -402,7 +402,7 @@ gradRates = as.data.frame.matrix(gradRates)
 colnames(gradRates) = c("DidNot", "Did")
 gradRates$Total = gradRates$DidNot + gradRates$Did
 gradRates$Rate = 100 * gradRates$Did / gradRates$Total
-
+print(gradRates)
 
 
 #-----------------------------------------------------#
