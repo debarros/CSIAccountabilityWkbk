@@ -14,6 +14,7 @@ colnames(cc.cur)[colnames(cc.cur) == "[01]Student_Number"] = "StudNum"
 cc.cur$dept = FullAlignment$Subject[match(cc.cur$CN, FullAlignment$Course)]       # add course-subject alignments
 cc.cur.math = cc.cur[cc.cur$dept == "Math",]                                      # limit to just math
 cc.cur.math = cc.cur.math[cc.cur.math$CN != "Exploring Algebra with Technology",] # remove EAT
+cc.cur.math = cc.cur.math[cc.cur.math$CN != "6th Grade Math",]                    # remove 6th grade math
 row.names(cc.cur.math) = NULL
 
 
@@ -32,6 +33,7 @@ F2$dept = FullAlignment$Subject[match(F2$Course_Name, FullAlignment$Course)] # a
 F2 = F2[!is.na(F2$dept),]                                                    # remove those with no dept
 F2 = F2[F2$dept == "Math",]                                                  # limit to math
 F2 = F2[F2$Course_Name != "Exploring Algebra with Technology",]              # remove EAT
+F2 = F2[F2$Course_Name != "6th Grade Math",]                                 # remove 6th grade math
 F2 = F2[!is.na(F2$Grade),]                                                   # remove those with no letter grade
 colnames(F2)[colnames(F2) == "[1]Student_Number"] = "StudNum"                # shorten column name
 
@@ -174,7 +176,7 @@ View(F2.passed[F2.passed$code %in% cc.cur.math$code,])
 F2$code = paste0(F2$StudNum, " - ", F2$Course_Name)
 F2.passed = F2[!is.na(F2$Grade),]
 F2.passed = F2.passed[F2.passed$Grade != "F",]
-F2.passed = F2.passed[F2.passed$TermID < 2700,]
+F2.passed = F2.passed[F2.passed$TermID < 2800,]
 cc.cur$code = paste0(cc.cur$StudNum, " - ", cc.cur$CN)
 intersect(F2.passed$code, cc.cur$code)
 View(F2.passed[F2.passed$code %in% cc.cur$code,])
