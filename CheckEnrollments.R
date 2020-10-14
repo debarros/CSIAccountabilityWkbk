@@ -82,14 +82,16 @@ summary(as.factor(student.frame$status))
 # export the file of students who are not active but still have class enrollments
 if(sum(student.frame$status) > 0){
   cols2use = c("StudentNumber","Last.Name","First.Name")
+  View(cc[cc$StuNum %in% student.frame$StudentID[student.frame$status != 0],])
   write.csv(student.frame[student.frame$status > 0,cols2use], file = paste0(OutFolder, "exited_students_who_still_have_classes.csv"))
+  print("There are inactive students who are still enrolled in sections.  See the output file.")
 } else {
   print("Yay!  There are no inactive students who are still enrolled in sections.")
 }
 
 
 
-cc[cc$StuNum %in% student.frame$StudentID[student.frame$status != 0],]
+
 
 
 
@@ -107,18 +109,33 @@ write.csv(x = student.frame[student.frame$totalEnrollments < 4,], file = paste0(
 summary(as.factor(student.frame$totalEnrollments))
 
 
-# Let's check for bad section info
+
+#-----------------------------------------#
+##### Let's check for bad section info ####
+#-----------------------------------------#
+
+sections = sections[sections$TermID >= schoolYear("termID"),]
 sections$delocated = F
 sections$delocated[is.na(sections$Room)] = T
 if(sum(sections$delocated) > 0){
   write.csv(x = sections[sections$delocated,], file = paste0(OutFolder, "delocated sections.csv"))
+} else {
+  print("Yay! no delocated sections!")
 }
 
 
 sections[is.na(sections$Course_Number),]
 sections[is.na(sections$`[05]lastfirst`),]
 sections[is.na(sections$Section_Number),]
-sections[is.na(sections$Expression),]
+
+sections$timeless = F
+sections$timeless[is.na(sections$Expression)] = T
+if(sum(sections$timeless) > 0){
+  write.csv(x = sections[sections$timeless,], file = paste0(OutFolder, "timeless sections.csv"))
+} else {
+  print("Yay! no timeless sections!")
+}
+
 
 sections[is.na(sections$`[02]Course_Name`),]
 
@@ -174,3 +191,55 @@ badBridge = student.frame[student.frame$BadBridge,]
 badBridge = badBridge[badBridge$GradeLevel != 6,]
 
 write.csv(x = badBridge, file = paste0(OutFolder, "missing bridge.csv"))
+
+
+
+
+#---------------------------------------#
+#### Which sections have no teacher? ####
+#---------------------------------------#
+
+
+
+
+
+#----------------------------------------#
+#### Which sections have no students? ####
+#----------------------------------------#
+
+
+sections$hasStudents = F
+for(thisSectID in unique(cc$SectionID)){
+  sections$hasStudents[sections$ID == thisSectID] = T
+}
+if(sum(!sections$hasStudents) > 0){
+  write.csv(x = sections[!sections$hasStudents,], file = paste0(OutFolder, "empty sections.csv"))
+} else {
+  print("Yay!  No empty sections")
+}
+
+
+
+
+#--------------------------------------------------#
+#### Which students have Lit Lab but not Lit 9? ####
+#--------------------------------------------------#
+
+
+cc.litlab = cc[cc$`[02]course_name` == "Literature 9 Lab",]
+cc.litlab$MissingLit9 = T
+for(thisStuRow in 1:nrow(cc.litlab)){
+  thisStu = cc.litlab$StuNum[thisStuRow]
+  cc.thisStu = cc[cc$StuNum == thisStu & cc$`[02]course_name` == "Literature 9- 1 credit",]
+  if(nrow(cc.thisStu) > 0){
+    cc.litlab$MissingLit9[thisStuRow] = F
+  }
+}
+cc.litlab.missing = cc.litlab[cc.litlab$MissingLit9,]
+if(nrow(cc.litlab.missing) > 0){
+  print("Uh oh, students are missing Lit 9.")
+  write.csv(x = cc.litlab.missing, file = paste0(OutFolder, "LitLabStudentsMissingLit9.csv"))
+} else {
+  print("Yay!  All lit lab students have lit 9.")
+}
+
