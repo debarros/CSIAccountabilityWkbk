@@ -90,11 +90,12 @@ CNMS.MakeBulkUpload(xlsxFile = StudentsToCheck.FilePath, singleGender = "M", upl
 
 # Only do this next part if Bulk Upload process has completed
 # Wait 24 hours after running Bulk Upload 1, then go back into NYSSIS.  
-# Click on the number of records next to the upload.  Download the results.
-# Go through the results and find matches.  When matches are found, enter them on the Results tab.
-# Once the results tab has been populated, continue:
+# Click on the number of records next to the upload.  
+# In 19-20, they changed it so there are two numbers to click on.  You want the "Side By Side Match Candidates".
+# Download the results in Excel format.
+# Open the file, save it, and close it again.
 
-bulkMatches = read.xlsx(xlsxFile = "\\\\stuthin2/data/2018-2019/lunch/Bulk Search Results (2018-10-24).xlsx")
+bulkMatches = read.xlsx(xlsxFile = paste0(LunchLocation,"/Child Nutrition - Bulk Search Results (2020-10-01).xlsx"))
 bulkMatches$P12.First.Name = powerschool$First_name[match(bulkMatches$Local.ID, powerschool$student_number)] 
 bulkMatches$P12.Last.Name = powerschool$Last_Name[match(bulkMatches$Local.ID, powerschool$student_number)] 
 bulkMatches = bulkMatches[,c("Local.ID", "P12.First.Name", "P12.Last.Name", "Certification.Method", "Case.Number(s)")]
@@ -106,8 +107,8 @@ summary(allMatches)
 summary(factor(allMatches$Certification.Method))
 write.csv(x = allMatches, file = paste0(OutFolder, "allmatches.csv"))
 
-unmatchedIDs = setdiff(StudentLiteExtract$StudentID, allMatches$Local.ID) # ID's of unmatched students 
-unmatchedIDs = StudentLiteExtract$StudentID %in% unmatchedIDs # Logical, which rows have unmatched students
+unmatchedIDs = setdiff(StudentLiteExtract$StudentID, allMatches$Local.ID)                              # ID's of unmatched students 
+unmatchedIDs = StudentLiteExtract$StudentID %in% unmatchedIDs                                          # Logical, which rows have unmatched students
 write.csv(x = StudentLiteExtract[unmatchedIDs, 4:8], file = paste0(OutFolder,"unmatchedStudents.csv")) # output unmatched students
 
 # Inform the relevant people about the number of matches.
@@ -165,6 +166,7 @@ if(nrow(freeLunch) > 0){
 #### PowerSchool Upload based on Lunch Forms ####
 #-----------------------------------------------#
 
+# Only do this part if there is lunch form data
 forms.new = forms[!(forms$Student.Number %in% allMatches$Local.ID),]     # leave out the ones who are already in allMatches
 forms.new = forms.new[!(forms.new$Student.Number %in% lunch$StudentID),] # leave out the ones who are already in PowerSchool
 if(nrow(forms.new) > 0){
@@ -298,16 +300,22 @@ for(i in 1:nrow(StudentLiteExtract)){
   StudentLiteExtract$EnrolledOnBEDSDay[i] = any(enrollments$Both)
 } # /for each student
 
+# This next section can only work if lunch services are already in PowerSchool
 StudentLiteExtract$Lunch = factor(
   lunch$PROGRAMSCODEPROGRAMSERVICECODE[match(
     StudentLiteExtract$StudentID, 
     lunch$StudentID)])
 summary(StudentLiteExtract$Lunch)
 
+# This next section will work as long as the bulk match process has already been done
+# StudentLiteExtract$Lunch = "Paid"
+# StudentLiteExtract$Lunch[StudentLiteExtract$StudentID %in% allMatches$Local.ID] = "Free"
+# StudentLiteExtract$Lunch = as.factor(StudentLiteExtract$Lunch)
+
 # Use the following line to determine which students to use
 # Subset it by EnrolledOnBEDSDay or EnrolledByBEDSDay, if desired.
 # Otherwise, don't subset it at all and just use the whole StudentLiteExtract
-usableStudents = StudentLiteExtract[StudentLiteExtract$EnrolledByBEDSDay,]
+usableStudents = StudentLiteExtract[StudentLiteExtract$EnrolledOnBEDSDay,]
 
 LunchByDistrict = table(usableStudents[,c("Lunch", "DISTRICTCODEOFRESIDENCE")], useNA = "always")
 DistrictCodes = dimnames(LunchByDistrict)$DISTRICTCODEOFRESIDENCE
@@ -315,6 +323,8 @@ DistrictNames = DORs$District.Name[match(DistrictCodes, DORs$District.ID)]
 dimnames(LunchByDistrict)$DISTRICTCODEOFRESIDENCE = DistrictNames
 write.csv(LunchByDistrict, paste0(OutFolder,"lunchByDistrict.csv"))
 
+LunchByGradeLevel = table(usableStudents[,c("Lunch", "CURRENTGRADELEVELGRADELEVEL")])
+write.csv(LunchByGradeLevel, paste0(OutFolder,"LunchByGradeLevel.csv"))
 
 # Preliminary Title 1 predictions for May 1 report #
 usableStudents$DOR = DORs$District.Name[match(usableStudents$DISTRICTCODEOFRESIDENCE, DORs$District.ID)]
