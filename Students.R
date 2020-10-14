@@ -15,7 +15,8 @@
 
 psStudents = powerschoolraw                                                                     # Make a copy of the original data
 psStudents$DOR = DORs$District.Name[match(psStudents$DistrictOfResidence, DORs$District.ID)]    # Get the DOR name
-inconsistencies = FindInconsistentActiveStatus(psStudentsRaw = psStudents, Workbook = Workbook) # Identify inconsistencies
+psStudents.high = psStudents[psStudents$grade_level >= 9,]
+inconsistencies = FindInconsistentActiveStatus(psStudentsRaw = psStudents.high, Workbook = Workbook) # Identify inconsistencies
 if(is.data.frame(inconsistencies)){                                                             # If there are any,
   write.csv(inconsistencies, paste0(OutFolder,"active and inactive inconsistencies.csv"))       # Output the results
   print("There were inconsistencies between the workbook and PowerSchool.  Check the file.")    # Notify the user
