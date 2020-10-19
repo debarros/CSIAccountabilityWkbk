@@ -40,7 +40,7 @@ for (i in dateVars) {
 # Note: update the data in PowerSchoolAll.xlsx before loading it
 # There is a tab in the file that shows what fields to export
 # This gets used in a bunch of places, such as Students.R, Regents.R, MathCourseAssignments.R, CheckEnrollments.R,
-# MathRegents.R, LunchStatus.R, NewStudents.R, etc
+# MathRegents.R, LunchStatus.R, NewStudents.R, LoginMailings.R, etc
 # This is also required for loading the PowerSchool F2 grades
 powerschoolraw = read.xlsx(xlsxFile = PSLocation, sheet = "Student Table")
 # Format the date variables
@@ -137,7 +137,7 @@ Regents.sessions =read.xlsx(xlsxFile = RegentsLocation, sheet = "Sessions")
 #### PowerSchool CC Table ####
 #----------------------------#
 # Load the current year's enrollment records (exported from the cc table in powerschool)
-# This gets used by Level0.R, CheckEnrollments.R, MathRegents.R, ClassOfAndGradYear.R, etc
+# This gets used by Level0.R, CheckEnrollments.R, MathRegents.R, ClassOfAndGradYear.R, LoginMailings.R, etc
 cc.raw = read.xlsx(xlsxFile = PSLocation, sheet = "cc")
 dateVars = c("DateEnrolled", "DateLeft")
 for (i in dateVars) {
@@ -256,7 +256,7 @@ for (i in dateVars) {
 #------------------------#
 #### Current Students ####
 #------------------------#
-# This gets used in MathCourseAssignments.R, MathRegents.R, and possibly other places
+# This gets used in MathCourseAssignments.R, MathRegents.R, LoginMailings.R, and possibly other places
 currentStudents = drive_download(
   as_id(CurrentStudentsAddress),
   path = paste0(OutFolder, "currentStudents.csv"),
