@@ -290,11 +290,15 @@ if(nrow(foster) > 0){
     print("No issues were found where students need lunch status changes due to fostering.")
   }
   
+} else {
+  print("No foster records found.")
 }
 
 migrant = progserv[progserv$PROGRAMSCODEPROGRAMSERVICECODE %in% c(0330),]
 if(nrow(migrant) > 0){
   print("Do something with the migrant students.")
+} else {
+  print("No migrant records found.")
 }
 
 
