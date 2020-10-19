@@ -21,10 +21,14 @@ for(i in 1:nrow(sect)){
 # Remove useless sections
 sect = sect[sect$TermID >= 3000,]
 sect = sect[!is.na(sect$External_Expression),]
+sect = sect[!(sect$`[02]Course_Name` %in% c("6th Grade Lunch", "7th Grade Lunch", "Lunch")),]
 rownames(sect) = NULL
+
+
 
 # Determine the period for each section
 sect$period = ""
+unique(sect$External_Expression)
 sect$period = substr(x = sect$External_Expression, start = 1, stop = 1)
 sect$period[sect$External_Expression == "11(A)"] = "L"
 sect$period[sect$External_Expression == "HR(A)"] = "A"
@@ -54,7 +58,7 @@ sect$Handle = sub(pattern = "@greentechhigh.org", replacement = "", x = sect$Han
 # Remove unnecessary enrollments
 cc = cc[cc$SectionID > 0,]       # eliminate dropped enrollments
 cc = cc[cc$TermID < 3002,]       # eliminate spring courses
-
+cc = cc[!(cc$`[02]course_name` %in% c("6th Grade Lunch", "7th Grade Lunch", "Lunch")),]
 
 # Add the gc link and period number from the sections table to the cc table
 cc$gcLink = ""
