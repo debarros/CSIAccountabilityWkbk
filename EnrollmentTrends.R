@@ -4,6 +4,8 @@
 #### Clean the data ####
 #----------------------#
 
+cohortCount = 10 # Set the number of recent cohorts to use for certain graphs
+
 # Remove those who never attended
 Workbook = Workbook[!(VbetterComp(Workbook$Discharge.Reason, "never attended")),]
 Workbook = Workbook[order(Workbook$`Cohort.Year.(year.1st.entered.9th)`),]
@@ -137,9 +139,10 @@ enr_lng = enr_lng[!(enr_lng$Cohort == "c2009"),]
 enr_lng$adj_dates = enr_lng$dates - 365*(enr_lng$cohort + 1)
 
 
-cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#FAA2F2", "#FF2E25", "#CC79A7")
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#FAA2F2", "#FF2E25", "#CC79A7","#00FF00", "#0000FF", "#00FFFF")
+cbbPalette = cbbPalette[1:cohortCount]
 
-cohortsToShow = tail(cohortSet, 8)
+cohortsToShow = tail(cohortSet, cohortCount)
 enr_lng2 = enr_lng[enr_lng$cohort %in% cohortsToShow,]
 p7 = ggplot(data = enr_lng2, aes(x = adj_dates, y = value, colour = Cohort)) + 
   geom_line(size = 2) +
