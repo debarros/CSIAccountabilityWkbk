@@ -11,7 +11,8 @@
 #### Reconcile Workbook and PowerSchool ####
 #------------------------------------------#
 
-#This part finds discrepancies between PowerSchool and the Accountability Workbook in terms of which students are current
+# This part finds discrepancies between PowerSchool and the Accountability Workbook in terms of which students are current
+# Note that it does not handle the Active but Not Enrolled situation well just yet
 
 psStudents = powerschoolraw                                                                     # Make a copy of the original data
 psStudents$DOR = DORs$District.Name[match(psStudents$DistrictOfResidence, DORs$District.ID)]    # Get the DOR name
