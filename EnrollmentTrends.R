@@ -77,7 +77,7 @@ p5 = ggplot(GraphData, aes(x=adjustedDate, y=count, color=year)) +
   geom_point(size = 1, alpha = .2)  +
   labs(y = "Number of Students", x = "Date", 
        title = "Total Enrollment Over Each Year") + 
-  coord_cartesian(ylim = c(300, 380)) +
+  coord_cartesian(ylim = c(290, 380)) +
   scale_x_date(labels = date_format("%b"), 
                date_breaks='1 month') +
   scale_colour_hue(l = 50) +                          # Use a slightly darker palette than normal
