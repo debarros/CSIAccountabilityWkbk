@@ -1,5 +1,8 @@
 #Analyzing SAT's and PSAT's
 
+# This analyzes the SAT and PSAT test scores.
+# It hasn't been used in a while, so I'm not sure it still works.
+
 #-------------------#
 #### PSAT Trends ####
 #-------------------#

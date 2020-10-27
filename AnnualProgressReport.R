@@ -1,5 +1,7 @@
 # AnnualProgressReport.R
 
+# This script helps prepare stuff that gets sent to Dan and Jen Pasek.
+
 #---------------------------#
 #### Load and clean data ####
 #---------------------------#

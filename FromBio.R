@@ -1,5 +1,7 @@
 # FromBio.R
 
+# This script takes all of the students who took Bio in a given year and determines what course they should take the following year.
+
 # Note: run Mainscript first
 
 currentTerm = 2800

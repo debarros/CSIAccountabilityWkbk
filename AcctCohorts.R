@@ -1,5 +1,8 @@
 #AcctCohorts.R
 
+# This script has to do with Accountability Cohorts.  Those are different from Graduation Cohorts.
+# This script is largely unnecessary due to modifications in the accountability workbook.
+
 #Figure out cohort membership by year by cohort
 
 #limit the workbook to just those students who are in the acct cohort for the year

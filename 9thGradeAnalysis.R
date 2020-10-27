@@ -1,4 +1,8 @@
 #9thGradeAnalysis.R
+
+# I don't know what this does.
+
+
 cc = cc.raw
 
 # Check the data ####

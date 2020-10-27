@@ -1,5 +1,8 @@
 # TeacherCourseRosters.R
 
+# This script produces all of the rosters for all of the courses.
+# The output has groups of columns for each teacher, and one column for each teacher/course combination
+# This was originally created to make it easier to load students into Plato.
 
 cc = cc.raw[cc.raw$SectionID > 0,]
 

@@ -1,5 +1,8 @@
 # DemographicChanges.R
 
+# This script looks for changes over time in the demographics (student lite) extracts.
+# It is usually used to identify situations where a student has changed school district of residence.
+
 demofolder = "\\\\stuthin2/data/2017-2018/Level 0/student lite (demographics)"
 demog.combo = read.csv.multi(folder = demofolder, header = F, idcol = "version")
 demog.combo = as.data.frame(demog.combo)

@@ -1,6 +1,7 @@
 # SATScores.R
 # Prepares the SAT scores from (data-drive)\SAT's\college_board_data.xlsx
 # This script is designed to update the old accountability workbook
+# It might not be useful anymore.
 
 #### Start with MainScript.R, then come back to this. ####
 

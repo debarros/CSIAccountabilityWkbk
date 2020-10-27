@@ -1,4 +1,7 @@
-#Enrollment trends
+# EnrollmentTrends.R
+
+# This script generates graphs showing the enrollment of the high school over time.
+# The graphs usually get used for board reports at the beginning of the school year.
 
 #----------------------#
 #### Clean the data ####

@@ -1,4 +1,7 @@
+# H3enrollment.R
+
 # What does this do?  Something to do with Lit 11 and US History
+# Because we no longer offer the co-taught ELA/SSt courses, this script is useless.
 
 library(openxlsx)
 

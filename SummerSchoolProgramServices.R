@@ -1,5 +1,7 @@
 # SummerSchoolProgramServices.R
 
+# This script creates a file to be imported into PowerSchool so all students who went to summer school get the appropriate program service records.
+
 # PowerSchool help on this process:
 # https://docs.powerschool.com/USANY/state-reporting-setup/ny-program-services-import
 

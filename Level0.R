@@ -1,5 +1,7 @@
 # Level0.R
 
+# This script cleans up the extracts from powerschool so they can be submitted to Level 0.
+
 #--------------------#
 #### Demographics ####
 #--------------------#

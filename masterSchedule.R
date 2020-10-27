@@ -1,4 +1,5 @@
-#Make pretty master schedules
+# masterSchedule.R
+# This script helps make pretty master schedules
 
 # In PowerSchool, get the master schedule in list view
 # Copy the table and paste it into the MasterSchedule tab in PowerSchoolAll.xslx

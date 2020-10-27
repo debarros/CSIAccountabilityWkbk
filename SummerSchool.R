@@ -1,5 +1,7 @@
 # SummerSchool.R
 
+# This is some super complicated stuff for creating summer school schedules.
+
 #----------------#
 #### Load data ###
 #----------------#

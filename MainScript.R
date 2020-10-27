@@ -1,7 +1,8 @@
 # MainScript.R
 # This script must be run before any other script is run
+# Usually, you only run the sections of this script that are necessary for what you are doing today.
 
-gc()
+gc() # This is a "garbage collection" command that frees up RAM on your computer.
 
 #-----------------------------------------#
 #### Load libraries and file locations ####

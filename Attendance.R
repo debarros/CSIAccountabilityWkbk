@@ -1,5 +1,7 @@
 # Attendance.R
 
+# This script analyzes attendance data.  It can be used to help identify students who are at risk.
+
 #---------------------------------------------------#
 #### Find seniors who cut class in the afternoon ####
 #---------------------------------------------------#

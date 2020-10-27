@@ -1,5 +1,7 @@
 # CheckExports.R
 
+# I'm not sure what this script is for.
+
 #Check homeless demographic records and program services ####
 View(demographics[demographics$`*HOMELESS(HOMELESS INDICATOR)` == "Y",])
 

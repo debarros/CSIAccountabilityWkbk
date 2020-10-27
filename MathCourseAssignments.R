@@ -1,5 +1,7 @@
 # MathCourseAssignments.R
 
+# This script takes all students and determines what math course they should take the next year.
+
 # fill the asapExports.xlsx file by exporting the Student List By Building files from ASAP.
 # Fill in graduates.csv with the students who just graduated in June
 

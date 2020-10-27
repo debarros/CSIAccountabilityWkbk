@@ -1,4 +1,5 @@
 # Measures of Interim Progress
+# This has to do with how SED accountability measures are calculated.
 
 MIPdata = read.xlsx(xlsxFile = file.choose(), sheet = 2)
 MIPdata$SUBJECT.NAME

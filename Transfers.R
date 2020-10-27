@@ -1,5 +1,7 @@
 # Transfers.R
 
+# This script has somethign to do with figuring out which students transfered out, when, why, and to where.
+
 #Read in the enrollment files from the past n years
 n = 2
 enrollment = vector(mode = "list", length = n)

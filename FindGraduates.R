@@ -1,6 +1,6 @@
 # FindGraduates.R
 
-# This file is to help with the submission process.
+# This file is to help with the submission process, where you send a file to CSI in September.
 # In the summer, graduates must be added to workbook.
 # This file reads in the most recent enrollment and demographics exports from PowerSchool.
 

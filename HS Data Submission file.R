@@ -1,6 +1,7 @@
 # HS Data Submission file
 # This script prepares the new version of the accountability workbook
-# This is the form that needs to get submitted starting in September 2018
+# This is the form that needs to get submitted to CSI in September starting in September 2018
+# It should also get sent to Dan and Jen Pasek
 
 lastDay = schoolYear(x = "end", y = Sys.Date() - 365)
 bedsDay = BedsDate(schoolYear() - 1)

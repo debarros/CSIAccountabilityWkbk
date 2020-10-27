@@ -1,5 +1,7 @@
 #crdc.R
 
+# This prepares data for the CRDC (Civil Rights Data Collection)
+
 BEDSday = BedsDate(year = 2017)
 EndDay = schoolYear(x = "end", y = BEDSday) - 29
 

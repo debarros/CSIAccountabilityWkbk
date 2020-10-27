@@ -1,5 +1,7 @@
 #Analyzing regents scores
 
+# This script calculates regents exam pass rates for prior years.
+
 TestTerms = paste0(2009:2019, " June") #define the terms you want
 
 regentsScores.GTH = regentsScores[which(regentsScores$Location == "GTH"),] #limit the data set to just GTH

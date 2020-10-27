@@ -1,5 +1,8 @@
 #Level0Historical.R
 
+# This script should help with resolving cohort membership issues.  
+# Use it to check on students who might have the wrong cohort year.
+
 #---------------------------#
 #### Fix historical data ####
 #---------------------------#

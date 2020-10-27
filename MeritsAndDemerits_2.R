@@ -1,5 +1,7 @@
 # Merits and demerits 2
 
+# This is not longer useful since we switched to using LiveSchool to record merits and demerits.
+
 #-----------------------------#
 #### Get everything set up ####
 #-----------------------------#

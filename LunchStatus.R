@@ -1,5 +1,7 @@
 # LunchStatus.R
 
+# This is for determing whether students qualify for Free or Reduced Price lunch
+
 # To run this, you need the following:
 #   A recent download of the state matches from the NYSSIS website
 #   A recent Program Facts extract from Power school
